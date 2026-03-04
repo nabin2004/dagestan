@@ -307,6 +307,196 @@ What's done, what's next, version by version through v5.0.
 
 ---
 
+## v6.0 — Distributed & Real-Time
+
+### Distributed Graph
+- [ ] Graph sharding: split graph across multiple storage nodes by entity/topic cluster
+- [ ] Consistent hashing for node-to-shard assignment
+- [ ] Cross-shard queries: retrieve from multiple shards and merge results
+- [ ] Shard rebalancing: redistribute nodes when clusters grow unevenly
+- [ ] Replication: configurable read replicas for high-availability
+
+### Real-Time Pipeline
+- [ ] Streaming ingestion: WebSocket endpoint for live conversation feeds
+- [ ] Incremental extraction: extract new nodes/edges from each message as it arrives
+- [ ] Real-time contradiction alerts: push notifications when conflicts are detected
+- [ ] Live graph subscriptions: clients subscribe to changes on specific nodes/entities
+- [ ] Event sourcing: store all graph mutations as an append-only event log
+
+### Collaboration
+- [ ] Multi-user graphs: multiple users contribute to a shared knowledge base
+- [ ] Conflict resolution protocol: handle simultaneous edits to the same node
+- [ ] Contribution attribution: track which user/agent added each piece of knowledge
+- [ ] Role-based permissions: reader, writer, curator, admin
+- [ ] Activity feed: chronological log of all graph changes per user
+
+### Observability
+- [ ] Metrics export: Prometheus/OpenTelemetry metrics for ingestion rate, graph size, curation latency
+- [ ] Health checks: endpoint to verify graph, storage, and LLM connectivity
+- [ ] Alerting hooks: configurable alerts for graph anomalies (sudden contradiction spike, etc.)
+- [ ] Query profiling: measure and log slow retrievals
+
+### Tests
+- [ ] Distributed shard consistency tests
+- [ ] Streaming ingestion throughput tests
+- [ ] Multi-user conflict resolution tests
+- [ ] Event sourcing replay correctness tests
+- [ ] Metrics accuracy tests
+
+---
+
+## v7.0 — Natural Language Graph Interface
+
+### Conversational Graph Queries
+- [ ] Natural language → graph query translation (user asks questions, system maps to traversal)
+- [ ] "When did I first mention X?" — temporal queries via natural language
+- [ ] "What contradicts X?" — contradiction queries via natural language
+- [ ] "How is X related to Y?" — path-finding queries via natural language
+- [ ] Query explanation: show the user which graph traversal was used and why
+
+### Graph Editing via Language
+- [ ] "Forget that I like coffee" — natural language node deletion
+- [ ] "Actually, I changed my mind about X" — natural language contradiction resolution
+- [ ] "Mark X as more important" — natural language confidence/priority adjustment
+- [ ] "Connect X to Y because Z" — natural language edge creation with reasoning
+- [ ] Edit confirmation: show proposed changes before applying
+
+### Explanation & Transparency
+- [ ] "Why do you think I like X?" — trace back to source conversation and extraction
+- [ ] Confidence explanation: show why a node has its current confidence score
+- [ ] Retrieval explanation: show why specific nodes were included in context
+- [ ] Curation audit: show what changed during last curation and why
+- [ ] Provenance chain: full lineage from conversation → extraction → node → retrieval
+
+### Personalization
+- [ ] User-defined importance: let users mark certain nodes as "always relevant"
+- [ ] Topic pinning: keep certain topics in context regardless of decay
+- [ ] Retrieval preferences: user controls balance of recency vs relevance vs breadth
+- [ ] Memory style: configurable verbosity of context injection (brief / detailed / structured)
+
+### Tests
+- [ ] NL query → graph traversal mapping tests
+- [ ] NL edit correctness tests (right node modified, nothing else broken)
+- [ ] Provenance chain completeness tests
+- [ ] Personalization override tests
+
+---
+
+## v8.0 — Learning & Adaptation
+
+### Extraction Learning
+- [ ] Extraction feedback loop: user corrects extracted nodes, system learns patterns
+- [ ] Per-domain extraction tuning: different prompt strategies for technical, casual, medical conversations
+- [ ] Entity resolution learning: improve deduplication based on past merge decisions
+- [ ] Confidence calibration: learn to predict extraction quality from conversation characteristics
+
+### Retrieval Learning
+- [ ] Relevance feedback: user rates retrieved context as helpful/not helpful
+- [ ] Weight optimization: auto-tune query/centrality/confidence weights from feedback
+- [ ] Query expansion learning: learn which related terms to include for better recall
+- [ ] Personalized ranking: adapt retrieval scoring to individual user behavior
+
+### Adaptive Graph Structure
+- [ ] Decay rate learning: adjust decay rates per node based on actual reinforcement patterns
+- [ ] Edge weight learning: learn relationship strengths from how often paths are traversed
+- [ ] Schema suggestion: detect when new node/edge types would improve graph quality
+- [ ] Auto-pruning thresholds: learn when to remove vs keep low-confidence nodes
+
+### Evaluation & Monitoring
+- [ ] A/B testing framework: compare retrieval strategies on live traffic
+- [ ] Drift detection: alert when graph quality metrics degrade over time
+- [ ] User satisfaction tracking: correlate memory quality with downstream task performance
+- [ ] Regression testing: ensure new learning doesn't break existing retrieval quality
+
+### Tests
+- [ ] Feedback loop convergence tests (weights stabilize with sufficient feedback)
+- [ ] Extraction improvement measurement after corrections
+- [ ] Decay rate adaptation tests against synthetic reinforcement patterns
+- [ ] A/B test framework correctness tests
+
+---
+
+## v9.0 — Domain-Specific Memory
+
+### Domain Templates
+- [ ] Medical: patient history tracking with symptom/treatment/outcome nodes
+- [ ] Legal: case law graph with precedent/statute/ruling relationships
+- [ ] Education: student knowledge model with mastery/gap/misconception nodes
+- [ ] Software engineering: codebase knowledge graph with module/dependency/issue nodes
+- [ ] Customer support: ticket/resolution/FAQ knowledge graph
+
+### Domain-Aware Operations
+- [ ] Domain-specific contradiction rules (medical: drug interactions, legal: conflicting precedents)
+- [ ] Domain-specific decay rates (medical history decays differently than code documentation)
+- [ ] Domain ontology validation: ensure graph structure matches domain expectations
+- [ ] Cross-domain bridges: identify when knowledge from one domain applies to another
+
+### Compliance & Regulation
+- [ ] HIPAA-compatible mode: encrypted storage, access logging, retention policies for medical data
+- [ ] SOC 2 readiness: audit trail, access controls, data handling documentation
+- [ ] Data residency: configurable storage location for regulatory compliance
+- [ ] Right to explanation: generate human-readable reports on how memory influenced LLM output
+
+### Import & Export
+- [ ] Import from existing knowledge bases (Notion, Obsidian, Confluence)
+- [ ] Export to standard graph formats (RDF, OWL, GraphML)
+- [ ] Interop with existing ontologies (Schema.org, FHIR for medical, etc.)
+- [ ] Bulk import with deduplication and conflict resolution
+
+### Tests
+- [ ] Domain template completeness tests per domain
+- [ ] Domain-specific contradiction detection tests
+- [ ] Compliance mode tests (encryption, access logging, retention)
+- [ ] Import/export round-trip tests across formats
+
+---
+
+## v10.0 — Cognitive Architecture
+
+### Planning & Goal Tracking
+- [ ] Goal decomposition: break high-level goals into subgoal trees in the graph
+- [ ] Progress tracking: mark subgoals as in-progress / completed / blocked
+- [ ] Dependency detection: identify when one goal depends on another
+- [ ] Plan suggestion: recommend next steps based on goal graph and current state
+- [ ] Goal conflict detection: find goals that compete for the same resources or contradict
+
+### Causal Reasoning
+- [ ] Causal chain extraction: build cause→effect chains from conversation history
+- [ ] Counterfactual queries: "What would change if X hadn't happened?"
+- [ ] Impact analysis: "If I change X, what else in the graph is affected?"
+- [ ] Root cause analysis: trace back from an outcome to contributing factors
+- [ ] Causal confidence: separate correlation from causation in extracted relationships
+
+### Episodic Memory
+- [ ] Episode boundaries: automatically segment continuous conversation into distinct episodes
+- [ ] Episode summarization: each episode gets a compressed summary node
+- [ ] Episode retrieval: "What happened in the session where we discussed X?"
+- [ ] Temporal pattern detection: recurring topics, cyclical preferences, seasonal goals
+- [ ] Autobiographical timeline: structured narrative of the entity's history with the system
+
+### World Model
+- [ ] Entity state tracking: maintain current state of entities (location, status, mood if expressed)
+- [ ] State transition detection: notice when an entity's state changes
+- [ ] Expectation modeling: predict what entity states should be based on past patterns
+- [ ] Surprise detection: flag when observations contradict the world model's expectations
+- [ ] Simulation: "If the user does X, what's the likely graph state afterward?"
+
+### Self-Improvement
+- [ ] Architecture benchmarking: measure which components contribute most to output quality
+- [ ] Component swapping: hot-swap extractors, retrievers, curators without downtime
+- [ ] Auto-configuration: system selects optimal parameters based on workload characteristics
+- [ ] Research mode: built-in experiment tracking for testing new graph operations
+- [ ] Meta-learning: graph of what the system has learned about its own performance
+
+### Tests
+- [ ] Goal decomposition and dependency tests
+- [ ] Causal chain extraction correctness tests
+- [ ] Episode boundary detection tests
+- [ ] World model consistency tests
+- [ ] Self-improvement loop convergence tests
+
+---
+
 ## Summary
 
 | Version | Theme | Estimated Scope |
@@ -319,5 +509,10 @@ What's done, what's next, version by version through v5.0.
 | v3.0 | Scale & ecosystem | Performance, streaming, dashboard, third-party integrations |
 | v4.0 | Multi-modal & cross-graph | Images/code/docs, graph merging, versioning, privacy |
 | v5.0 | Autonomous memory | Self-curation, hypothesis generation, compression, meta-memory |
+| v6.0 | Distributed & real-time | Sharding, streaming ingestion, collaboration, observability |
+| v7.0 | NL graph interface | Conversational queries, language-based editing, provenance, personalization |
+| v8.0 | Learning & adaptation | Extraction/retrieval feedback loops, adaptive structure, A/B testing |
+| v9.0 | Domain-specific memory | Domain templates, compliance, ontology interop, bulk import/export |
+| v10.0 | Cognitive architecture | Goal tracking, causal reasoning, episodic memory, world model |
 
 Each version builds on the previous one. Nothing here is promised — it's a direction, not a contract. Priorities will shift based on what actually works and what users need.
