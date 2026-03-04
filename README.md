@@ -1,12 +1,13 @@
 # Dagestan
 
+
 **Temporal Graph Memory Layer for LLMs**
 
 Dagestan stores LLM memory as a typed temporal knowledge graph instead of flat vector embeddings. It tracks entities, concepts, events, preferences, and goals — with time-aware confidence decay, contradiction detection, and relationship-based retrieval.
 
 ## Why
 
-Current LLM memory solutions (Mem0, vector DBs) treat memory as a pile of embeddings retrieved by similarity. They don't understand:
+Current LLM memory solutions (vector DBs) treat memory as a pile of embeddings retrieved by similarity. They don't understand:
 
 - **Time** — old information and new information are treated the same
 - **Relationships** — there's no structure between memories
@@ -177,7 +178,6 @@ dagestan/
 ## Evaluation (Planned)
 
 We intend to benchmark Dagestan against:
-- Mem0
 - Naive context window (just include recent messages)
 - Vector DB retrieval (e.g., ChromaDB)
 
