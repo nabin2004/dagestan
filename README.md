@@ -201,6 +201,3 @@ Performance claims will only be made after benchmarks are actually conducted. Un
 
 MIT
 
----
-
-Built from Nepal, with limited compute, from first principles.
