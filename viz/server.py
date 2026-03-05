@@ -12,6 +12,7 @@ Serves:
 - GET /api/graph/stats → graph statistics
 - GET /api/graph/hash  → hash of current graph (for change detection)
 - GET /api/files       → list available graph JSON files
+- GET /api/events      → Server-Sent Events stream for live updates
 """
 
 from __future__ import annotations
@@ -22,8 +23,10 @@ import json
 import mimetypes
 import os
 import sys
+import threading
 import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse, parse_qs
@@ -176,6 +179,11 @@ def _serve_static(handler: "VizHandler", path: str) -> None:
     handler.wfile.write(body)
 
 
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """HTTPServer that handles each request in a new thread (needed for SSE)."""
+    daemon_threads = True
+
+
 class VizHandler(BaseHTTPRequestHandler):
     """HTTP request handler for the graph visualizer."""
 
@@ -197,6 +205,10 @@ class VizHandler(BaseHTTPRequestHandler):
         elif path == "/api/files":
             assert _state is not None
             _json_response(self, _state.list_graph_files())
+        elif path == "/api/events":
+            # Server-Sent Events for live push updates
+            self._serve_sse()
+            return
         elif path == "/api/switch":
             # Switch to a different graph file
             file_path = params.get("file", [None])[0]
@@ -223,10 +235,45 @@ class VizHandler(BaseHTTPRequestHandler):
         else:
             _serve_static(self, path)
 
+    def _serve_sse(self) -> None:
+        """Server-Sent Events stream — pushes graph updates to the client."""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+
+        assert _state is not None
+        last_hash = _state.hash
+
+        try:
+            while True:
+                _state.reload()
+                current_hash = _state.hash
+                if current_hash != last_hash:
+                    last_hash = current_hash
+                    event_data = json.dumps({
+                        "type": "graph_update",
+                        "hash": current_hash,
+                        "node_count": len(_state._data.get("nodes", [])),
+                        "edge_count": len(_state._data.get("edges", [])),
+                    })
+                    self.wfile.write(f"event: update\ndata: {event_data}\n\n".encode())
+                    self.wfile.flush()
+                else:
+                    # Send keepalive
+                    self.wfile.write(b": keepalive\n\n")
+                    self.wfile.flush()
+
+                time.sleep(1)
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            pass  # Client disconnected
+
     def log_message(self, format: str, *args: Any) -> None:
         """Suppress default logs for API polling, keep others."""
-        if "/api/graph/hash" in str(args):
-            return  # Don't spam logs for poll requests
+        if "/api/graph/hash" in str(args) or "/api/events" in str(args):
+            return  # Don't spam logs for poll/SSE requests
         super().log_message(format, *args)
 
 
@@ -274,7 +321,7 @@ def main() -> None:
         watch_dir=PROJECT_ROOT,
     )
 
-    server = HTTPServer((args.host, args.port), VizHandler)
+    server = ThreadedHTTPServer((args.host, args.port), VizHandler)
     url = f"http://{args.host}:{args.port}"
 
     print(f"""

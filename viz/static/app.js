@@ -56,6 +56,7 @@ let pollTimer = null;
 let pollInterval = 2000;
 let typeChart = null;
 let confChart = null;
+let eventSource = null;  // SSE connection
 
 // Filters
 let activeTypeFilters = new Set(['entity', 'concept', 'event', 'preference', 'goal']);
@@ -74,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCharts();
     loadFileList();
     fetchAndRender();
-    startPolling();
+    startLiveUpdates();
     log('info', 'Visualizer initialized');
 });
 
@@ -178,13 +179,15 @@ function initControls() {
     // Refresh interval
     document.getElementById('refreshInterval').addEventListener('change', (e) => {
         pollInterval = parseInt(e.target.value, 10);
-        startPolling();
         const indicator = document.getElementById('liveIndicator');
         if (pollInterval === 0) {
             indicator.classList.add('paused');
+            if (eventSource) { eventSource.close(); eventSource = null; }
+            if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
             log('info', 'Live refresh paused');
         } else {
             indicator.classList.remove('paused');
+            startLiveUpdates();
             log('info', `Live refresh: ${pollInterval / 1000}s`);
         }
     });
@@ -744,8 +747,59 @@ function buildTypeFilters() {
 
 
 // ════════════════════════════════════════════════════════════
-// Polling / Live Updates
+// Live Updates — SSE with polling fallback
 // ════════════════════════════════════════════════════════════
+
+function startLiveUpdates() {
+    // Try SSE first, fall back to polling
+    if (typeof EventSource !== 'undefined') {
+        connectSSE();
+    } else {
+        startPolling();
+    }
+}
+
+
+function connectSSE() {
+    if (eventSource) {
+        eventSource.close();
+    }
+
+    try {
+        eventSource = new EventSource('/api/events');
+
+        eventSource.addEventListener('update', (e) => {
+            try {
+                const data = JSON.parse(e.data);
+                log('update', `SSE: graph changed (${data.node_count}N/${data.edge_count}E)`);
+                fetchAndRender(true);
+                flashLiveIndicator();
+            } catch (err) {
+                log('warn', `SSE parse error: ${err.message}`);
+            }
+        });
+
+        eventSource.onopen = () => {
+            log('success', 'SSE connected — live push updates active');
+            // Stop polling if running
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+        };
+
+        eventSource.onerror = () => {
+            log('warn', 'SSE disconnected — falling back to polling');
+            eventSource.close();
+            eventSource = null;
+            startPolling();
+        };
+    } catch {
+        log('warn', 'SSE not available — using polling');
+        startPolling();
+    }
+}
+
 
 function startPolling() {
     if (pollTimer) {
