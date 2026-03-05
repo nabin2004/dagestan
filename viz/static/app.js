@@ -64,6 +64,12 @@ let searchQuery = '';
 let confMinFilter = 0;
 let confMaxFilter = 1;
 
+// Diff tracking
+let previousNodeIds = new Set();
+let previousEdgeIds = new Set();
+let newNodeIds = new Set();    // Nodes added in last update
+let removedNodeIds = new Set(); // Nodes removed in last update
+
 
 // ════════════════════════════════════════════════════════════
 // Initialization
@@ -153,6 +159,7 @@ function initGraph() {
 
     // Event listeners
     network.on('click', onNetworkClick);
+    network.on('doubleClick', onNetworkDoubleClick);
     network.on('hoverNode', () => { container.style.cursor = 'pointer'; });
     network.on('blurNode', () => { container.style.cursor = 'default'; });
     network.on('stabilizationProgress', (params) => {
@@ -295,6 +302,15 @@ async function fetchAndRender(force = false) {
 
         graphData = data;
 
+        // Track diffs — what nodes/edges were added or removed
+        const currentNodeIds = new Set(data.nodes.map(n => n.id));
+        const currentEdgeIds = new Set(data.edges.map(e => e.id));
+        newNodeIds = new Set([...currentNodeIds].filter(id => !previousNodeIds.has(id)));
+        removedNodeIds = new Set([...previousNodeIds].filter(id => !currentNodeIds.has(id)));
+        const newEdgeCount = [...currentEdgeIds].filter(id => !previousEdgeIds.has(id)).length;
+        previousNodeIds = currentNodeIds;
+        previousEdgeIds = currentEdgeIds;
+
         // Update hash
         const hashResp2 = await fetch('/api/graph/hash');
         const hashData2 = await hashResp2.json();
@@ -307,8 +323,19 @@ async function fetchAndRender(force = false) {
         buildTypeFilters();
 
         if (changed) {
-            log('update', `Graph updated — ${data.nodes.length} nodes, ${data.edges.length} edges`);
+            let msg = `Graph updated — ${data.nodes.length} nodes, ${data.edges.length} edges`;
+            if (newNodeIds.size > 0) msg += ` (+${newNodeIds.size} new nodes)`;
+            if (removedNodeIds.size > 0) msg += ` (-${removedNodeIds.size} removed)`;
+            if (newEdgeCount > 0) msg += ` (+${newEdgeCount} new edges)`;
+            log('update', msg);
             flashLiveIndicator();
+
+            // Clear diff highlights after 5 seconds
+            setTimeout(() => {
+                newNodeIds.clear();
+                removedNodeIds.clear();
+                renderGraph(); // Re-render without highlights
+            }, 5000);
         }
 
     } catch (err) {
@@ -380,20 +407,31 @@ function renderGraph() {
             // Opacity based on confidence
             const opacity = 0.3 + conf * 0.7;
 
+            // Highlight newly added nodes with a glow
+            const isNew = newNodeIds.has(n.id);
+
             return {
                 id: n.id,
-                label: n.label,
+                label: isNew ? `✦ ${n.label}` : n.label,
                 shape: NODE_SHAPES[n.type] || 'dot',
-                size: size,
+                size: isNew ? size * 1.4 : size,
                 color: {
-                    background: colors.bg,
-                    border: colors.border,
+                    background: isNew ? '#2ea04370' : colors.bg,
+                    border: isNew ? '#3fb950' : colors.border,
                     highlight: colors.highlight,
                 },
                 font: {
-                    color: colors.font,
+                    color: isNew ? '#3fb950' : colors.font,
                 },
                 opacity: opacity,
+                borderWidth: isNew ? 4 : 2,
+                shadow: isNew ? {
+                    enabled: true,
+                    color: '#3fb95060',
+                    size: 20,
+                    x: 0,
+                    y: 0,
+                } : undefined,
                 title: buildNodeTooltip(n),
                 _rawData: n,
             };
@@ -461,6 +499,42 @@ function filterNode(node) {
 
 function applyFilters() {
     renderGraph();
+}
+
+
+// ════════════════════════════════════════════════════════════
+// Neighborhood Explorer (double-click)
+// ════════════════════════════════════════════════════════════
+
+function onNetworkDoubleClick(params) {
+    if (params.nodes.length === 0) {
+        // Double-click on empty space — reset zoom
+        network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+        log('info', 'Reset view — showing all nodes');
+        return;
+    }
+
+    const nodeId = params.nodes[0];
+    const node = graphData.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+
+    // Find all neighboring node IDs
+    const neighborIds = new Set([nodeId]);
+    (graphData.edges || []).forEach(e => {
+        if (e.source_id === nodeId) neighborIds.add(e.target_id);
+        if (e.target_id === nodeId) neighborIds.add(e.source_id);
+    });
+
+    // Zoom to neighborhood
+    network.fit({
+        nodes: [...neighborIds],
+        animation: { duration: 500, easingFunction: 'easeInOutQuad' },
+    });
+
+    // Highlight the neighborhood
+    network.selectNodes([...neighborIds]);
+
+    log('info', `Focused on "${node.label}" neighborhood (${neighborIds.size} nodes)`);
 }
 
 
@@ -584,6 +658,12 @@ function renderNodeInspector(node) {
         <div class="inspector-field">
             <div class="field-label">Connected Edges</div>
             <div class="field-value">${countConnectedEdges(node.id)}</div>
+        </div>
+        <div class="inspector-field" style="margin-top: 8px;">
+            <button class="btn" onclick="toggleRawJson('node', '${node.id}')" style="width:100%; font-size:11px;">
+                📋 Raw JSON
+            </button>
+            <pre id="rawJson-${node.id}" style="display:none; margin-top:6px; font-size:10px; background:#0d1117; padding:8px; border-radius:4px; overflow-x:auto; color:#8b949e; max-height:200px; overflow-y:auto;"></pre>
         </div>
     `;
 }
@@ -871,3 +951,83 @@ function formatTime(isoStr) {
         return isoStr;
     }
 }
+
+
+// ════════════════════════════════════════════════════════════
+// Keyboard Shortcuts
+// ════════════════════════════════════════════════════════════
+
+document.addEventListener('keydown', (e) => {
+    // Don't trigger shortcuts when typing in inputs
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+    switch (e.key) {
+        case 'r':
+        case 'R':
+            fetchAndRender(true);
+            log('info', 'Manual refresh (R)');
+            break;
+        case 'f':
+        case 'F':
+            network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+            break;
+        case '/':
+            e.preventDefault();
+            document.getElementById('searchInput').focus();
+            break;
+        case 'Escape':
+            document.getElementById('searchInput').blur();
+            network.unselectAll();
+            break;
+        case '?':
+            showKeyboardHelp();
+            break;
+    }
+});
+
+
+function showKeyboardHelp() {
+    const existing = document.getElementById('helpModal');
+    if (existing) { existing.remove(); return; }
+
+    const modal = document.createElement('div');
+    modal.id = 'helpModal';
+    modal.style.cssText = `
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: #21262d; border: 1px solid #30363d; border-radius: 8px;
+        padding: 24px; z-index: 1000; min-width: 320px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    `;
+    modal.innerHTML = `
+        <h3 style="margin-bottom: 12px; color: #e6edf3;">⌨️ Keyboard Shortcuts</h3>
+        <table style="font-size: 13px; color: #8b949e; width: 100%;">
+            <tr><td style="padding: 4px 12px 4px 0;"><kbd style="background:#161b22;padding:2px 6px;border-radius:3px;border:1px solid #30363d;">R</kbd></td><td>Refresh graph</td></tr>
+            <tr><td style="padding: 4px 12px 4px 0;"><kbd style="background:#161b22;padding:2px 6px;border-radius:3px;border:1px solid #30363d;">F</kbd></td><td>Fit to view</td></tr>
+            <tr><td style="padding: 4px 12px 4px 0;"><kbd style="background:#161b22;padding:2px 6px;border-radius:3px;border:1px solid #30363d;">/</kbd></td><td>Focus search</td></tr>
+            <tr><td style="padding: 4px 12px 4px 0;"><kbd style="background:#161b22;padding:2px 6px;border-radius:3px;border:1px solid #30363d;">Esc</kbd></td><td>Clear selection</td></tr>
+            <tr><td style="padding: 4px 12px 4px 0;"><kbd style="background:#161b22;padding:2px 6px;border-radius:3px;border:1px solid #30363d;">?</kbd></td><td>Toggle this help</td></tr>
+        </table>
+        <p style="margin-top: 12px; font-size: 11px; color: #484f58;">
+            Double-click a node to explore its neighborhood.<br/>
+            Double-click empty space to reset zoom.
+        </p>
+    `;
+    modal.addEventListener('click', () => modal.remove());
+    document.body.appendChild(modal);
+}
+
+
+// Toggle raw JSON display for node or edge
+function toggleRawJson(type, id) {
+    const el = document.getElementById(`rawJson-${id}`);
+    if (!el) return;
+    if (el.style.display === 'none') {
+        const items = type === 'node' ? graphData.nodes : graphData.edges;
+        const item = items.find(i => i.id === id);
+        el.textContent = JSON.stringify(item, null, 2);
+        el.style.display = 'block';
+    } else {
+        el.style.display = 'none';
+    }
+}
+// Make it globally accessible
+window.toggleRawJson = toggleRawJson;
