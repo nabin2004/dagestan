@@ -959,7 +959,7 @@ function formatTime(isoStr) {
 
 document.addEventListener('keydown', (e) => {
     // Don't trigger shortcuts when typing in inputs
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
     switch (e.key) {
         case 'r':
@@ -971,13 +971,23 @@ document.addEventListener('keydown', (e) => {
         case 'F':
             network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
             break;
+        case 'e':
+        case 'E':
+            openExportModal();
+            break;
         case '/':
             e.preventDefault();
             document.getElementById('searchInput').focus();
             break;
         case 'Escape':
-            document.getElementById('searchInput').blur();
-            network.unselectAll();
+            // Close export modal if open, otherwise clear selection
+            const exportModal = document.getElementById('exportModal');
+            if (exportModal && exportModal.style.display !== 'none') {
+                closeExportModal();
+            } else {
+                document.getElementById('searchInput').blur();
+                network.unselectAll();
+            }
             break;
         case '?':
             showKeyboardHelp();
@@ -1002,6 +1012,7 @@ function showKeyboardHelp() {
         <table style="font-size: 13px; color: #8b949e; width: 100%;">
             <tr><td style="padding: 4px 12px 4px 0;"><kbd style="background:#161b22;padding:2px 6px;border-radius:3px;border:1px solid #30363d;">R</kbd></td><td>Refresh graph</td></tr>
             <tr><td style="padding: 4px 12px 4px 0;"><kbd style="background:#161b22;padding:2px 6px;border-radius:3px;border:1px solid #30363d;">F</kbd></td><td>Fit to view</td></tr>
+            <tr><td style="padding: 4px 12px 4px 0;"><kbd style="background:#161b22;padding:2px 6px;border-radius:3px;border:1px solid #30363d;">E</kbd></td><td>Export for LaTeX</td></tr>
             <tr><td style="padding: 4px 12px 4px 0;"><kbd style="background:#161b22;padding:2px 6px;border-radius:3px;border:1px solid #30363d;">/</kbd></td><td>Focus search</td></tr>
             <tr><td style="padding: 4px 12px 4px 0;"><kbd style="background:#161b22;padding:2px 6px;border-radius:3px;border:1px solid #30363d;">Esc</kbd></td><td>Clear selection</td></tr>
             <tr><td style="padding: 4px 12px 4px 0;"><kbd style="background:#161b22;padding:2px 6px;border-radius:3px;border:1px solid #30363d;">?</kbd></td><td>Toggle this help</td></tr>
@@ -1031,3 +1042,286 @@ function toggleRawJson(type, id) {
 }
 // Make it globally accessible
 window.toggleRawJson = toggleRawJson;
+
+
+// ════════════════════════════════════════════════════════════
+// Export Modal — LaTeX / DOT / CSV / PNG / SVG
+// ════════════════════════════════════════════════════════════
+
+let _exportCache = { content: '', filename: '', format: '' };
+
+function openExportModal() {
+    const modal = document.getElementById('exportModal');
+    modal.style.display = 'flex';
+    // Wire up format option clicks
+    document.querySelectorAll('.export-format-option').forEach(opt => {
+        opt.onclick = () => selectExportFormat(opt.dataset.format);
+    });
+    // Wire up option changes to auto-refresh preview
+    ['optLayout', 'optScale', 'optConfidence', 'optEdgeLabels', 'optPaperMode', 'optMonochrome'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.onchange = () => {
+            const current = document.querySelector('.export-format-option.selected');
+            if (current) selectExportFormat(current.dataset.format);
+        };
+    });
+    // Click overlay to close
+    modal.onclick = (e) => { if (e.target === modal) closeExportModal(); };
+    // Generate initial preview
+    selectExportFormat('tikz');
+    log('info', 'Export modal opened');
+}
+window.openExportModal = openExportModal;
+
+function closeExportModal() {
+    document.getElementById('exportModal').style.display = 'none';
+}
+window.closeExportModal = closeExportModal;
+
+function selectExportFormat(fmt) {
+    // Update selection UI
+    document.querySelectorAll('.export-format-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.format === fmt);
+        const radio = opt.querySelector('input[type="radio"]');
+        if (radio) radio.checked = opt.dataset.format === fmt;
+    });
+
+    // Show/hide options panel based on format
+    const optionsPanel = document.getElementById('exportOptions');
+    const monoRow = document.getElementById('optMonochromeRow');
+    if (fmt === 'tikz') {
+        optionsPanel.style.display = 'block';
+        monoRow.style.display = 'none';
+    } else if (fmt === 'dot') {
+        optionsPanel.style.display = 'block';
+        monoRow.style.display = 'flex';
+    } else {
+        optionsPanel.style.display = 'none';
+    }
+
+    // Handle client-side exports
+    if (fmt === 'png' || fmt === 'svg') {
+        generateClientExport(fmt);
+        return;
+    }
+
+    // Server-side export with preview
+    generateServerExport(fmt);
+}
+
+async function generateServerExport(fmt) {
+    const codeEl = document.getElementById('exportCode');
+    codeEl.textContent = 'Generating...';
+
+    const params = new URLSearchParams({ format: fmt, preview: 'true' });
+
+    // Add options for TikZ and DOT
+    if (fmt === 'tikz' || fmt === 'dot') {
+        params.set('layout', document.getElementById('optLayout').value);
+        params.set('scale', document.getElementById('optScale').value);
+        params.set('show_confidence', document.getElementById('optConfidence').checked);
+        params.set('show_edge_labels', document.getElementById('optEdgeLabels').checked);
+        params.set('paper_mode', document.getElementById('optPaperMode').checked);
+    }
+    if (fmt === 'dot') {
+        params.set('monochrome', document.getElementById('optMonochrome').checked);
+    }
+
+    try {
+        const resp = await fetch(`/api/export?${params}`);
+        const data = await resp.json();
+        if (data.error) {
+            codeEl.textContent = `Error: ${data.error}`;
+            return;
+        }
+
+        _exportCache = { content: data.content, filename: data.filename, format: fmt };
+        codeEl.textContent = data.content;
+
+        document.getElementById('exportFilename').textContent = data.filename;
+        const bytes = new Blob([data.content]).size;
+        document.getElementById('exportSize').textContent = formatBytes(bytes);
+    } catch (err) {
+        codeEl.textContent = `Error: ${err.message}`;
+    }
+}
+
+function generateClientExport(fmt) {
+    const codeEl = document.getElementById('exportCode');
+    const previewEl = document.querySelector('.preview-content');
+
+    if (fmt === 'png') {
+        codeEl.textContent = '';
+        // Use vis-network canvas export
+        const canvas = document.querySelector('#graphCanvas canvas');
+        if (!canvas) {
+            codeEl.textContent = 'Error: No graph canvas found. Render a graph first.';
+            return;
+        }
+        // Create high-res export (2x)
+        const scale = 2;
+        const exportCanvas = document.createElement('canvas');
+        exportCanvas.width = canvas.width * scale;
+        exportCanvas.height = canvas.height * scale;
+        const ctx = exportCanvas.getContext('2d');
+        ctx.scale(scale, scale);
+        // Fill background
+        ctx.fillStyle = '#0d1117';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(canvas, 0, 0);
+
+        const dataUrl = exportCanvas.toDataURL('image/png');
+        _exportCache = { content: dataUrl, filename: 'dagestan_graph.png', format: 'png' };
+
+        // Show preview as image
+        const img = document.createElement('img');
+        img.src = dataUrl;
+        img.style.cssText = 'max-width:100%;max-height:100%;display:block;margin:8px auto;';
+        const pre = previewEl.querySelector('pre');
+        if (pre) pre.style.display = 'none';
+        // Remove old image preview if any
+        const oldImg = previewEl.querySelector('img');
+        if (oldImg) oldImg.remove();
+        previewEl.appendChild(img);
+
+        document.getElementById('exportFilename').textContent = 'dagestan_graph.png';
+        document.getElementById('exportSize').textContent = formatBytes(dataUrl.length * 0.75);
+    } else if (fmt === 'svg') {
+        // vis-network doesn't have native SVG export, so we generate one from the data
+        const svgContent = generateSVGExport();
+        _exportCache = { content: svgContent, filename: 'dagestan_graph.svg', format: 'svg' };
+        codeEl.textContent = svgContent;
+        // Restore pre visibility if hidden by PNG
+        const pre = previewEl.querySelector('pre');
+        if (pre) pre.style.display = '';
+        const oldImg = previewEl.querySelector('img');
+        if (oldImg) oldImg.remove();
+
+        document.getElementById('exportFilename').textContent = 'dagestan_graph.svg';
+        document.getElementById('exportSize').textContent = formatBytes(new Blob([svgContent]).size);
+    }
+}
+
+function generateSVGExport() {
+    // Build an SVG representation from the current vis-network positions
+    const positions = network.getPositions();
+    const width = 800, height = 600;
+
+    // Compute bounds
+    const nodeIds = Object.keys(positions);
+    if (nodeIds.length === 0) return '<svg xmlns="http://www.w3.org/2000/svg"><text>No nodes</text></svg>';
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    nodeIds.forEach(id => {
+        const p = positions[id];
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y > maxY) maxY = p.y;
+    });
+
+    const pad = 60;
+    const rangeX = (maxX - minX) || 1;
+    const rangeY = (maxY - minY) || 1;
+    const scaleX = (width - 2 * pad) / rangeX;
+    const scaleY = (height - 2 * pad) / rangeY;
+    const scale = Math.min(scaleX, scaleY);
+
+    function tx(x) { return pad + (x - minX) * scale; }
+    function ty(y) { return pad + (y - minY) * scale; }
+
+    const svgColors = {
+        entity: '#58a6ff', concept: '#bc8cff', event: '#d29922',
+        preference: '#3fb950', goal: '#f85149'
+    };
+
+    let lines = [];
+    lines.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`);
+    lines.push(`  <rect width="${width}" height="${height}" fill="#0d1117"/>`);
+    lines.push(`  <defs><marker id="arrow" viewBox="0 0 10 6" refX="10" refY="3" markerWidth="8" markerHeight="6" orient="auto"><path d="M0,0 L10,3 L0,6 Z" fill="#484f58"/></marker></defs>`);
+
+    // Build id -> node lookup
+    const nodeMap = {};
+    graphData.nodes.forEach(n => { nodeMap[n.id] = n; });
+
+    // Edges
+    graphData.edges.forEach(e => {
+        const sp = positions[e.source_id], tp = positions[e.target_id];
+        if (!sp || !tp) return;
+        const x1 = tx(sp.x), y1 = ty(sp.y), x2 = tx(tp.x), y2 = ty(tp.y);
+        const color = EDGE_COLORS[e.edge_type] || '#484f58';
+        lines.push(`  <line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${color}" stroke-width="1.5" stroke-opacity="0.6" marker-end="url(#arrow)"/>`);
+    });
+
+    // Nodes
+    nodeIds.forEach(id => {
+        const p = positions[id];
+        const node = nodeMap[id];
+        if (!node) return;
+        const cx = tx(p.x), cy = ty(p.y);
+        const color = svgColors[node.node_type] || '#58a6ff';
+        const r = 12;
+        lines.push(`  <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r}" fill="${color}" fill-opacity="0.3" stroke="${color}" stroke-width="2"/>`);
+        // Escape label for XML
+        const label = (node.name || node.id).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        lines.push(`  <text x="${cx.toFixed(1)}" y="${(cy + r + 14).toFixed(1)}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="10" fill="#e6edf3">${label}</text>`);
+    });
+
+    lines.push('</svg>');
+    return lines.join('\n');
+}
+
+async function copyExport() {
+    if (!_exportCache.content) return;
+    try {
+        await navigator.clipboard.writeText(_exportCache.content);
+        showToast('Copied to clipboard!');
+    } catch {
+        // Fallback for older browsers
+        const ta = document.createElement('textarea');
+        ta.value = _exportCache.content;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        showToast('Copied to clipboard!');
+    }
+}
+window.copyExport = copyExport;
+
+function downloadExport() {
+    if (!_exportCache.content) return;
+    const { content, filename, format } = _exportCache;
+
+    if (format === 'png') {
+        // Data URL download
+        const a = document.createElement('a');
+        a.href = content;
+        a.download = filename;
+        a.click();
+    } else {
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+    showToast(`Downloaded ${filename}`);
+}
+window.downloadExport = downloadExport;
+
+function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'copy-toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2000);
+}
+
+function formatBytes(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1048576).toFixed(1)} MB`;
+}

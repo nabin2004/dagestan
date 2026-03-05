@@ -13,6 +13,8 @@ Serves:
 - GET /api/graph/hash  → hash of current graph (for change detection)
 - GET /api/files       → list available graph JSON files
 - GET /api/events      → Server-Sent Events stream for live updates
+- GET /api/export      → export graph in LaTeX-friendly formats
+- GET /api/export/formats → list available export formats
 """
 
 from __future__ import annotations
@@ -209,6 +211,11 @@ class VizHandler(BaseHTTPRequestHandler):
             # Server-Sent Events for live push updates
             self._serve_sse()
             return
+        elif path == "/api/export/formats":
+            from .export import EXPORT_FORMATS
+            _json_response(self, EXPORT_FORMATS)
+        elif path == "/api/export":
+            self._handle_export(params)
         elif path == "/api/switch":
             # Switch to a different graph file
             file_path = params.get("file", [None])[0]
@@ -234,6 +241,55 @@ class VizHandler(BaseHTTPRequestHandler):
             handler.end_headers()
         else:
             _serve_static(self, path)
+
+    def _handle_export(self, params: dict[str, list[str]]) -> None:
+        """Handle export requests — generate LaTeX/DOT/CSV output."""
+        from .export import export_graph
+
+        assert _state is not None
+        fmt = (params.get("format") or params.get("fmt") or ["tikz"])[0]
+
+        # Collect optional kwargs
+        kwargs: dict[str, Any] = {}
+        if "layout" in params:
+            kwargs["layout"] = params["layout"][0]
+        if "scale" in params:
+            kwargs["scale"] = float(params["scale"][0])
+        if "show_confidence" in params:
+            kwargs["show_confidence"] = params["show_confidence"][0] != "false"
+        if "show_edge_labels" in params:
+            kwargs["show_edge_labels"] = params["show_edge_labels"][0] != "false"
+        if "paper_mode" in params:
+            kwargs["paper_mode"] = params["paper_mode"][0] != "false"
+        if "monochrome" in params:
+            kwargs["monochrome"] = params["monochrome"][0] == "true"
+        if "rankdir" in params:
+            kwargs["rankdir"] = params["rankdir"][0]
+        if "booktabs" in params:
+            kwargs["booktabs"] = params["booktabs"][0] != "false"
+
+        try:
+            content, filename, content_type = export_graph(_state.data, fmt, **kwargs)
+        except ValueError as exc:
+            _json_response(self, {"error": str(exc)}, 400)
+            return
+
+        # Check if client wants inline preview or file download
+        if params.get("preview", [""])[0] == "true":
+            _json_response(self, {
+                "format": fmt,
+                "filename": filename,
+                "content": content,
+            })
+        else:
+            body = content.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(body)
 
     def _serve_sse(self) -> None:
         """Server-Sent Events stream — pushes graph updates to the client."""
