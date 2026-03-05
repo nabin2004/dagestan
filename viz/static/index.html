@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dagestan Graph Visualizer</title>
+
+    <!-- vis-network for graph rendering -->
+    <script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
+    <link href="https://unpkg.com/vis-network@9.1.6/styles/vis-network.min.css" rel="stylesheet" />
+
+    <!-- Chart.js for stats -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header id="header">
+            <div class="header-left">
+                <h1>🔷 Dagestan Graph Visualizer</h1>
+                <div class="live-indicator" id="liveIndicator">
+                    <span class="live-dot"></span>
+                    <span>LIVE</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="file-picker">
+                    <label for="fileSelect">Graph File:</label>
+                    <select id="fileSelect">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="refresh-control">
+                    <label for="refreshInterval">Refresh:</label>
+                    <select id="refreshInterval">
+                        <option value="1000">1s</option>
+                        <option value="2000" selected>2s</option>
+                        <option value="5000">5s</option>
+                        <option value="10000">10s</option>
+                        <option value="0">Off</option>
+                    </select>
+                </div>
+                <button id="btnRefresh" class="btn btn-primary" title="Force refresh">⟳ Refresh</button>
+                <button id="btnFitView" class="btn" title="Fit graph to view">⊞ Fit</button>
+            </div>
+        </header>
+
+        <!-- Main layout -->
+        <div id="main">
+            <!-- Left sidebar: filters & stats -->
+            <aside id="sidebar">
+                <!-- Stats panel -->
+                <div class="panel" id="statsPanel">
+                    <h3>📊 Graph Stats</h3>
+                    <div class="stat-grid" id="statGrid">
+                        <div class="stat-card">
+                            <span class="stat-value" id="statNodes">0</span>
+                            <span class="stat-label">Nodes</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value" id="statEdges">0</span>
+                            <span class="stat-label">Edges</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value" id="statAvgConf">0</span>
+                            <span class="stat-label">Avg Confidence</span>
+                        </div>
+                        <div class="stat-card warn">
+                            <span class="stat-value" id="statLowConf">0</span>
+                            <span class="stat-label">Low Confidence</span>
+                        </div>
+                    </div>
+                    <div class="stat-timestamp" id="statTimestamp"></div>
+                </div>
+
+                <!-- Filter panel -->
+                <div class="panel" id="filterPanel">
+                    <h3>🔍 Filters</h3>
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Search nodes..." />
+                    </div>
+                    <div class="filter-group">
+                        <h4>Node Types</h4>
+                        <div id="nodeTypeFilters"></div>
+                    </div>
+                    <div class="filter-group">
+                        <h4>Confidence Range</h4>
+                        <div class="range-control">
+                            <input type="range" id="confMin" min="0" max="100" value="0" />
+                            <span id="confMinLabel">0%</span>
+                            <span>–</span>
+                            <input type="range" id="confMax" min="0" max="100" value="100" />
+                            <span id="confMaxLabel">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Type distribution chart -->
+                <div class="panel" id="chartPanel">
+                    <h3>📈 Type Distribution</h3>
+                    <canvas id="typeChart" width="250" height="180"></canvas>
+                </div>
+
+                <!-- Confidence histogram -->
+                <div class="panel" id="confChartPanel">
+                    <h3>📉 Confidence Distribution</h3>
+                    <canvas id="confChart" width="250" height="180"></canvas>
+                </div>
+            </aside>
+
+            <!-- Center: graph canvas -->
+            <div id="graphContainer">
+                <div id="graphCanvas"></div>
+                <div id="graphOverlay" class="graph-overlay">
+                    <span id="overlayText">Loading graph...</span>
+                </div>
+            </div>
+
+            <!-- Right panel: inspector -->
+            <aside id="inspector">
+                <div class="panel">
+                    <h3>🔎 Inspector</h3>
+                    <div id="inspectorContent">
+                        <p class="muted">Click a node or edge to inspect it.</p>
+                    </div>
+                </div>
+
+                <!-- Event log -->
+                <div class="panel">
+                    <h3>📋 Event Log</h3>
+                    <div id="eventLog" class="event-log">
+                        <div class="log-entry info">Visualizer started</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
