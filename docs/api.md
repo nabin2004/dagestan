@@ -227,3 +227,89 @@ mem = Dagestan(llm_client=my_llm)
 ```
 
 This means Dagestan works with any LLM — local models, custom APIs, anything that takes two strings and returns a string.
+
+---
+
+## Visualization Server
+
+The `viz` module provides a zero-dependency HTTP server for interactive graph exploration.
+
+### Running
+
+```bash
+python -m viz.server                          # auto-detect graph file
+python -m viz.server --file graph.json        # specific file
+python -m viz.server --port 9000 --host 0.0.0.0  # custom bind
+```
+
+### REST API Endpoints
+
+| Endpoint | Method | Response | Description |
+|----------|--------|----------|-------------|
+| `/api/graph` | GET | `{"nodes": [...], "edges": [...]}` | Full graph JSON snapshot |
+| `/api/graph/stats` | GET | `{"node_count", "edge_count", "node_types", ...}` | Graph statistics |
+| `/api/graph/hash` | GET | `{"hash": "md5..."}` | Hash for change detection |
+| `/api/files` | GET | `[{"path", "node_count", "edge_count", ...}]` | List graph JSON files in project |
+| `/api/events` | GET | SSE stream | Server-Sent Events — pushes `graph-update` on file change |
+| `/api/export?format=tikz` | GET | text | Export graph (formats: `tikz`, `dot`, `latex_tables`, `csv`) |
+| `/api/export/formats` | GET | `[{"id", "name", "description"}]` | List available export formats |
+| `/api/switch?file=path` | GET | `{"ok": true}` | Switch to a different graph file |
+
+### GraphState
+
+```python
+from viz.server import GraphState
+
+state = GraphState(graph_path="memory.json", watch_dir=".")
+state.reload()          # Returns True if data changed
+state.data              # Current graph dict
+state.hash              # MD5 hash of graph file
+state.get_stats()       # Node/edge counts, type distributions
+state.list_graph_files()  # Find all graph JSONs in watch_dir
+```
+
+### FileWatcher
+
+```python
+from viz.watcher import FileWatcher
+
+def on_change(data):
+    print(f"Graph updated: {len(data['nodes'])} nodes")
+
+watcher = FileWatcher("memory.json", interval=0.5, on_change=on_change)
+watcher.start()   # Background thread polls file mtime
+watcher.stop()
+```
+
+### Export Functions
+
+```python
+from viz.export import export_tikz, export_dot, export_latex_tables, export_csv
+
+graph_data = {"nodes": [...], "edges": [...]}
+
+tikz_code = export_tikz(graph_data, layout="spring", scale=3.0, paper_mode=True)
+dot_code  = export_dot(graph_data)
+tables    = export_latex_tables(graph_data)
+csv_text  = export_csv(graph_data)
+```
+
+| Function | Output | Use Case |
+|----------|--------|----------|
+| `export_tikz(data, layout, scale, show_confidence, paper_mode)` | TikZ/PGF code | Direct `\input{}` in LaTeX |
+| `export_dot(data)` | Graphviz DOT | Compile with `dot` → PDF/SVG |
+| `export_latex_tables(data)` | LaTeX `tabular` environments | Node/edge listing tables |
+| `export_csv(data)` | CSV text | Data appendices, pgfplots |
+
+### Demo Graph Generator
+
+```bash
+python -m viz.generate_demo --output demo.json --nodes 25
+```
+
+```python
+from viz.generate_demo import build_demo_graph
+
+graph = build_demo_graph(node_count=20)
+graph.save_to_file("demo.json")
+```

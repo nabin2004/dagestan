@@ -162,8 +162,59 @@ dagestan/
 │   └── retriever.py         # Query-driven graph traversal
 ├── storage/
 │   └── store.py             # JSON persistence (SQLite planned for v0.2)
-└── integrations/            # Planned: drop-in OpenAI/Anthropic wrappers
+├── integrations/            # Planned: drop-in OpenAI/Anthropic wrappers
+viz/
+├── __init__.py
+├── __main__.py              # Entry point (python -m viz)
+├── server.py                # Stdlib HTTP server + REST API + SSE
+├── watcher.py               # File-change polling (no deps)
+├── export.py                # LaTeX/TikZ, DOT, CSV export
+├── generate_demo.py         # Demo graph generator
+└── static/
+    ├── index.html           # Main UI page
+    ├── style.css            # Dark-theme styling
+    └── app.js               # vis-network graph rendering
 ```
+
+## Visualization
+
+Dagestan ships with a **zero-dependency interactive graph visualizer** for debugging and exploring your knowledge graphs in the browser.
+
+```bash
+# Launch with auto-detected graph file
+python -m viz.server
+
+# Or point at a specific file and port
+python -m viz.server --file demo_memory.json --port 8765
+```
+
+Then open **http://localhost:8765**.
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **Live Graph Rendering** | Interactive force-directed layout via vis-network |
+| **Auto-Refresh / SSE** | File watcher detects changes and pushes updates via Server-Sent Events |
+| **Diff Highlighting** | New nodes glow green with a ✦ marker; removed counts shown in dashboard |
+| **Node & Edge Inspector** | Click any element to view full metadata, confidence, decay rate |
+| **Neighborhood Explorer** | Double-click a node to zoom into its local neighborhood |
+| **Stats Dashboard** | Node/edge counts, type distributions, confidence histograms |
+| **Temporal Decay View** | Color-coded confidence levels (green → yellow → red) |
+| **Filter by Type** | Toggle node types on/off |
+| **Search** | Find nodes by label (keyboard shortcut: `/`) |
+| **LaTeX / DOT / CSV Export** | Export graphs for research papers (TikZ, Graphviz DOT, CSV) |
+| **File Switcher** | Browse and switch between graph JSON files in the project |
+| **Keyboard Shortcuts** | `R` refresh, `F` fit view, `/` search, `?` help, `Esc` clear |
+
+### Generate a Demo Graph
+
+```bash
+python -m viz.generate_demo --output viz_demo_graph.json --nodes 25
+python -m viz.server --file viz_demo_graph.json
+```
+
+See [viz/README.md](viz/README.md) for full details.
 
 ## Roadmap
 
