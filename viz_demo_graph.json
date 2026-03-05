@@ -1,0 +1,534 @@
+{
+  "timestamp": "2026-03-05T20:00:42.701353+00:00",
+  "node_count": 24,
+  "edge_count": 27,
+  "nodes": [
+    {
+      "id": "399f48d8a7e0",
+      "type": "entity",
+      "label": "Alice",
+      "attributes": {
+        "role": "engineer"
+      },
+      "created_at": "2026-03-05T20:00:42.700894+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.700899+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.005,
+      "source": ""
+    },
+    {
+      "id": "4a47c4666466",
+      "type": "entity",
+      "label": "Bob",
+      "attributes": {
+        "role": "designer"
+      },
+      "created_at": "2026-03-05T20:00:42.700910+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.700912+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.005,
+      "source": ""
+    },
+    {
+      "id": "db18578674d2",
+      "type": "entity",
+      "label": "TechCorp",
+      "attributes": {
+        "industry": "AI"
+      },
+      "created_at": "2026-03-05T20:00:42.700920+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.700921+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.005,
+      "source": ""
+    },
+    {
+      "id": "d87bbf0ac0eb",
+      "type": "entity",
+      "label": "Python",
+      "attributes": {
+        "category": "language"
+      },
+      "created_at": "2026-03-05T20:00:42.700928+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.700929+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.005,
+      "source": ""
+    },
+    {
+      "id": "6d11af4c6435",
+      "type": "entity",
+      "label": "Rust",
+      "attributes": {
+        "category": "language"
+      },
+      "created_at": "2026-03-05T20:00:42.700936+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.700937+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.005,
+      "source": ""
+    },
+    {
+      "id": "84cbdf3efc42",
+      "type": "entity",
+      "label": "San Francisco",
+      "attributes": {
+        "type": "city"
+      },
+      "created_at": "2026-03-05T20:00:42.700943+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.700944+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.005,
+      "source": ""
+    },
+    {
+      "id": "274541e00811",
+      "type": "concept",
+      "label": "Machine Learning",
+      "attributes": {
+        "domain": "AI"
+      },
+      "created_at": "2026-03-05T20:00:42.700951+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.700952+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "0f3bf9c0996a",
+      "type": "concept",
+      "label": "Knowledge Graphs",
+      "attributes": {
+        "domain": "AI"
+      },
+      "created_at": "2026-03-05T20:00:42.700958+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.700960+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "cab1ed7de27a",
+      "type": "concept",
+      "label": "LLM Memory Systems",
+      "attributes": {
+        "domain": "AI"
+      },
+      "created_at": "2026-03-05T20:00:42.700965+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.700967+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "9d5e060d235e",
+      "type": "concept",
+      "label": "User Experience Design",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.700972+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.700974+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "e24713c8797c",
+      "type": "concept",
+      "label": "Distributed Systems",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.700983+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.700984+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "38d5d9c64d87",
+      "type": "concept",
+      "label": "Temporal Reasoning",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.700990+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.700991+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "96c567402964",
+      "type": "event",
+      "label": "Product Launch v1.0",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.700998+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.700999+00:00",
+      "confidence_score": 0.9,
+      "decay_rate": 0.05,
+      "source": ""
+    },
+    {
+      "id": "3f5db20d1af9",
+      "type": "event",
+      "label": "Team Planning Meeting",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.701004+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.701006+00:00",
+      "confidence_score": 0.7,
+      "decay_rate": 0.05,
+      "source": ""
+    },
+    {
+      "id": "25fb64ae2eae",
+      "type": "event",
+      "label": "AI Hackathon 2026",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.701012+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.701013+00:00",
+      "confidence_score": 0.85,
+      "decay_rate": 0.05,
+      "source": ""
+    },
+    {
+      "id": "cc5d301d6995",
+      "type": "event",
+      "label": "Critical Bug Fix",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.701019+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.701020+00:00",
+      "confidence_score": 0.6,
+      "decay_rate": 0.05,
+      "source": ""
+    },
+    {
+      "id": "b056744fcfea",
+      "type": "preference",
+      "label": "Loves coffee",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.701025+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.701027+00:00",
+      "confidence_score": 0.95,
+      "decay_rate": 0.02,
+      "source": ""
+    },
+    {
+      "id": "17fbbd4bf338",
+      "type": "preference",
+      "label": "Prefers dark mode",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.701032+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.701033+00:00",
+      "confidence_score": 0.8,
+      "decay_rate": 0.02,
+      "source": ""
+    },
+    {
+      "id": "3ff7fcb711b5",
+      "type": "preference",
+      "label": "Switched to tea",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.701039+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.701040+00:00",
+      "confidence_score": 0.3,
+      "decay_rate": 0.02,
+      "source": ""
+    },
+    {
+      "id": "8808f1c5a49c",
+      "type": "preference",
+      "label": "Uses Vim",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.701045+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.701047+00:00",
+      "confidence_score": 0.75,
+      "decay_rate": 0.02,
+      "source": ""
+    },
+    {
+      "id": "f68354fe3195",
+      "type": "goal",
+      "label": "Launch by Q2 2026",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.701052+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.701054+00:00",
+      "confidence_score": 0.85,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "9ea44f425ba6",
+      "type": "goal",
+      "label": "Raise Series A",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.701060+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.701061+00:00",
+      "confidence_score": 0.6,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "b68fcd9c09df",
+      "type": "goal",
+      "label": "Scale to 1M users",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.701067+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.701069+00:00",
+      "confidence_score": 0.4,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "a734d4f9c3bf",
+      "type": "goal",
+      "label": "Learn Rust deeply",
+      "attributes": {},
+      "created_at": "2026-03-05T20:00:42.701077+00:00",
+      "last_reinforced": "2026-03-05T20:00:42.701078+00:00",
+      "confidence_score": 0.7,
+      "decay_rate": 0.01,
+      "source": ""
+    }
+  ],
+  "edges": [
+    {
+      "id": "6d44ea69c5b4",
+      "source_id": "399f48d8a7e0",
+      "target_id": "d87bbf0ac0eb",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701094+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "e19e6c9f4f80",
+      "source_id": "399f48d8a7e0",
+      "target_id": "274541e00811",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701101+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "c4ac084d10da",
+      "source_id": "399f48d8a7e0",
+      "target_id": "db18578674d2",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701108+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "01a049541eb8",
+      "source_id": "399f48d8a7e0",
+      "target_id": "b056744fcfea",
+      "type": "has_preference",
+      "created_at": "2026-03-05T20:00:42.701114+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "98de297564b3",
+      "source_id": "399f48d8a7e0",
+      "target_id": "3ff7fcb711b5",
+      "type": "has_preference",
+      "created_at": "2026-03-05T20:00:42.701120+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "38955bfb5bc8",
+      "source_id": "399f48d8a7e0",
+      "target_id": "17fbbd4bf338",
+      "type": "has_preference",
+      "created_at": "2026-03-05T20:00:42.701126+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "f108015d07f9",
+      "source_id": "399f48d8a7e0",
+      "target_id": "f68354fe3195",
+      "type": "wants",
+      "created_at": "2026-03-05T20:00:42.701132+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "c02a0510bcbd",
+      "source_id": "399f48d8a7e0",
+      "target_id": "a734d4f9c3bf",
+      "type": "wants",
+      "created_at": "2026-03-05T20:00:42.701137+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "8f2499c5d63a",
+      "source_id": "399f48d8a7e0",
+      "target_id": "84cbdf3efc42",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701142+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "919d6469d94d",
+      "source_id": "4a47c4666466",
+      "target_id": "9d5e060d235e",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701148+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "c4473a898460",
+      "source_id": "4a47c4666466",
+      "target_id": "db18578674d2",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701153+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "b767e95a7cdf",
+      "source_id": "4a47c4666466",
+      "target_id": "8808f1c5a49c",
+      "type": "has_preference",
+      "created_at": "2026-03-05T20:00:42.701159+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "2a8e1e37007b",
+      "source_id": "4a47c4666466",
+      "target_id": "9ea44f425ba6",
+      "type": "wants",
+      "created_at": "2026-03-05T20:00:42.701164+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "3a7919a93979",
+      "source_id": "274541e00811",
+      "target_id": "0f3bf9c0996a",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701172+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "c43bd71d9e60",
+      "source_id": "0f3bf9c0996a",
+      "target_id": "cab1ed7de27a",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701178+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "3b9990c0d264",
+      "source_id": "cab1ed7de27a",
+      "target_id": "38d5d9c64d87",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701183+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "eba431e133a2",
+      "source_id": "e24713c8797c",
+      "target_id": "6d11af4c6435",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701188+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "9742ee95bd85",
+      "source_id": "d87bbf0ac0eb",
+      "target_id": "274541e00811",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701194+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "3d5fd72dad6f",
+      "source_id": "3f5db20d1af9",
+      "target_id": "96c567402964",
+      "type": "happened_before",
+      "created_at": "2026-03-05T20:00:42.701200+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "6e7f86590c7d",
+      "source_id": "96c567402964",
+      "target_id": "f68354fe3195",
+      "type": "caused",
+      "created_at": "2026-03-05T20:00:42.701205+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "11bc8fba84e7",
+      "source_id": "25fb64ae2eae",
+      "target_id": "0f3bf9c0996a",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701212+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "b7494adccbb7",
+      "source_id": "cc5d301d6995",
+      "target_id": "96c567402964",
+      "type": "happened_before",
+      "created_at": "2026-03-05T20:00:42.701218+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "6443e96b3d24",
+      "source_id": "b056744fcfea",
+      "target_id": "3ff7fcb711b5",
+      "type": "contradicts",
+      "created_at": "2026-03-05T20:00:42.701225+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "b48fe6074c41",
+      "source_id": "f68354fe3195",
+      "target_id": "9ea44f425ba6",
+      "type": "happened_before",
+      "created_at": "2026-03-05T20:00:42.701230+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "82d573cf4dd2",
+      "source_id": "9ea44f425ba6",
+      "target_id": "b68fcd9c09df",
+      "type": "happened_before",
+      "created_at": "2026-03-05T20:00:42.701235+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "b344a3e8700b",
+      "source_id": "db18578674d2",
+      "target_id": "84cbdf3efc42",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701241+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "8f433d3cf10e",
+      "source_id": "db18578674d2",
+      "target_id": "cab1ed7de27a",
+      "type": "relates_to",
+      "created_at": "2026-03-05T20:00:42.701246+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    }
+  ]
+}
