@@ -33,3 +33,7 @@ Thumbs.db
 # Dagestan data files
 *.db
 memory_snapshots/
+
+
+# Chats session
+anthropic/

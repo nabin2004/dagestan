@@ -1,0 +1,60 @@
+{
+  "timestamp": "2026-03-05T19:26:39.806987+00:00",
+  "node_count": 3,
+  "edge_count": 2,
+  "nodes": [
+    {
+      "id": "10392443fbe1",
+      "type": "entity",
+      "label": "Alice",
+      "attributes": {},
+      "created_at": "2026-03-05T19:26:39.805290+00:00",
+      "last_reinforced": "2026-03-05T19:26:39.805297+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.005,
+      "source": ""
+    },
+    {
+      "id": "82cf217753da",
+      "type": "concept",
+      "label": "Python Programming",
+      "attributes": {},
+      "created_at": "2026-03-05T19:26:39.805307+00:00",
+      "last_reinforced": "2026-03-05T19:26:39.805308+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "3856dee85a36",
+      "type": "goal",
+      "label": "Build a startup",
+      "attributes": {},
+      "created_at": "2026-03-05T19:26:39.805316+00:00",
+      "last_reinforced": "2026-03-05T19:26:39.805317+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    }
+  ],
+  "edges": [
+    {
+      "id": "07ff5fc9245d",
+      "source_id": "10392443fbe1",
+      "target_id": "82cf217753da",
+      "type": "has_preference",
+      "created_at": "2026-03-05T19:26:39.806442+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "5b2567ffb307",
+      "source_id": "10392443fbe1",
+      "target_id": "3856dee85a36",
+      "type": "wants",
+      "created_at": "2026-03-05T19:26:39.806610+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    }
+  ]
+}
