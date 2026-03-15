@@ -11,6 +11,7 @@ with timestamps, and JSON persistence for v0.1.
 from __future__ import annotations
 
 import json
+import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,10 +35,38 @@ class TemporalGraph:
         # Adjacency index: node_id → list of edge_ids (outgoing + incoming)
         self._adj: dict[str, list[str]] = {}
 
+        # Dagestan advanced memory features
+        self.snapshots_store: list[dict[str, Any]] = []
+        self.contradictions_queue: list[dict[str, Any]] = []
+        self.schema_registry: dict[str, set[str]] = {
+            "node_types": set(),
+            "edge_types": set()
+        }
+
+    def _take_snapshot(self) -> None:
+        """Temporal snapshotting: save previous state before mutation."""
+        # For memory efficiency in the demo, we could limit this or store diffs.
+        # Here we just store the full snapshot per requirement.
+        self.snapshots_store.append(self.snapshot())
+
+    def _record_schema_induction(self, node_type: str | None = None, edge_type: str | None = None) -> None:
+        """Live schema registry for emerging entity/relation types."""
+        if node_type and node_type not in self.schema_registry["node_types"]:
+            self.schema_registry["node_types"].add(node_type)
+            logging.info(f"Schema induction: new NodeType observed -> {node_type}")
+            
+        if edge_type and edge_type not in self.schema_registry["edge_types"]:
+            self.schema_registry["edge_types"].add(edge_type)
+            logging.info(f"Schema induction: new EdgeType observed -> {edge_type}")
+
     # ── Node operations ─────────────────────────────────────────────
 
     def add_node(self, node: Node) -> Node:
         """Add a node to the graph. Returns the node (for chaining)."""
+        # Node contradiction check (e.g. properties) can be handled via _take_snapshot
+        self._take_snapshot()
+        self._record_schema_induction(node_type=node.type)
+        
         self._nodes[node.id] = node
         if node.id not in self._adj:
             self._adj[node.id] = []
@@ -47,7 +76,7 @@ class TemporalGraph:
         """Retrieve a node by ID, or None if not found."""
         return self._nodes.get(node_id)
 
-    def get_nodes_by_type(self, node_type: NodeType) -> list[Node]:
+    def get_nodes_by_type(self, node_type: str) -> list[Node]:
         """Return all nodes of a given type."""
         return [n for n in self._nodes.values() if n.type == node_type]
 
@@ -60,6 +89,8 @@ class TemporalGraph:
         """Remove a node and all its connected edges. Returns True if removed."""
         if node_id not in self._nodes:
             return False
+
+        self._take_snapshot()
 
         # Remove all connected edges
         connected_edge_ids = list(self._adj.get(node_id, []))
@@ -82,6 +113,21 @@ class TemporalGraph:
 
     # ── Edge operations ─────────────────────────────────────────────
 
+    def _find_edge_contradiction(self, edge: Edge) -> Edge | None:
+        """
+        Check for a conflicting edge.
+        For demonstration, assumes uniqueness of target for a specific source and relation type,
+        unless it's 'relates_to' or 'happened_before'.
+        """
+        if edge.type in ("relates_to", "happened_before"):
+            return None
+            
+        existing_edges = self.get_edges(node_id=edge.source_id, direction="outgoing")
+        for e in existing_edges:
+            if e.type == edge.type and e.target_id != edge.target_id:
+                return e
+        return None
+
     def add_edge(self, edge: Edge) -> Edge:
         """
         Add an edge to the graph.
@@ -98,6 +144,19 @@ class TemporalGraph:
                 f"Target node {edge.target_id!r} not found in graph"
             )
 
+        contradicting_edge = self._find_edge_contradiction(edge)
+        if contradicting_edge:
+            logging.info(f"Contradiction flagged: {edge} conflicts with {contradicting_edge}")
+            self.contradictions_queue.append({
+                "new_edge": edge.to_dict(),
+                "existing_edge": contradicting_edge.to_dict(),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            return edge  # Return edge to caller but omit from graph
+
+        self._take_snapshot()
+        self._record_schema_induction(edge_type=edge.type)
+
         self._edges[edge.id] = edge
         self._adj.setdefault(edge.source_id, []).append(edge.id)
         self._adj.setdefault(edge.target_id, []).append(edge.id)
@@ -110,7 +169,7 @@ class TemporalGraph:
     def get_edges(
         self,
         node_id: str | None = None,
-        edge_type: EdgeType | None = None,
+        edge_type: str | None = None,
         direction: str = "both",  # "outgoing", "incoming", "both"
     ) -> list[Edge]:
         """
@@ -141,6 +200,8 @@ class TemporalGraph:
         """Remove an edge. Returns True if removed."""
         if edge_id not in self._edges:
             return False
+            
+        self._take_snapshot()
         self._remove_edge_from_adj(edge_id)
         del self._edges[edge_id]
         return True
@@ -188,6 +249,10 @@ class TemporalGraph:
             "edge_count": self.edge_count,
             "nodes": [n.to_dict() for n in self._nodes.values()],
             "edges": [e.to_dict() for e in self._edges.values()],
+            "schema_registry": {
+                "node_types": list(self.schema_registry["node_types"]),
+                "edge_types": list(self.schema_registry["edge_types"])
+            }
         }
 
     def load_snapshot(self, data: dict[str, Any]) -> None:
@@ -210,6 +275,10 @@ class TemporalGraph:
             self._edges[edge.id] = edge
             self._adj.setdefault(edge.source_id, []).append(edge.id)
             self._adj.setdefault(edge.target_id, []).append(edge.id)
+            
+        registry = data.get("schema_registry", {})
+        self.schema_registry["node_types"] = set(registry.get("node_types", []))
+        self.schema_registry["edge_types"] = set(registry.get("edge_types", []))
 
     def save_to_file(self, path: str | Path) -> None:
         """Save current graph state to a JSON file."""

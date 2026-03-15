@@ -39,7 +39,7 @@ class LLMClient(Protocol):
 
 def _make_openai_client(
     api_key: str | None = None,
-    model: str = "gpt-4o-mini",
+    model: str = "google/gemini-3.1-pro-preview",
 ) -> LLMClient:
     """Create a simple OpenAI-based LLM callable."""
 
@@ -51,7 +51,9 @@ def _make_openai_client(
                 "openai package required. Install with: pip install dagestan[openai]"
             )
 
-        client = OpenAI(api_key=api_key)
+        client = OpenAI(base_url="https://openrouter.ai/api/v1",
+                        api_key=api_key
+                        )
         response = client.chat.completions.create(
             model=model,
             messages=[

@@ -376,7 +376,6 @@ def main() -> None:
         graph_path=graph_file,
         watch_dir=PROJECT_ROOT,
     )
-
     server = ThreadedHTTPServer((args.host, args.port), VizHandler)
     url = f"http://{args.host}:{args.port}"
 
@@ -384,9 +383,9 @@ def main() -> None:
 ╔══════════════════════════════════════════════════╗
 ║       🔷 Dagestan Graph Visualizer 🔷            ║
 ╠══════════════════════════════════════════════════╣
-║  URL:   {url:<40s}║
-║  File:  {str(graph_file or 'None'):<40s}║
-║  Press Ctrl+C to stop                           ║
+║  URL:   {url:<40s}                               ║
+║  File:  {str(graph_file or 'None'):<40s}         ║
+║  Press Ctrl+C to stop                            ║
 ╚══════════════════════════════════════════════════╝
 """)
 

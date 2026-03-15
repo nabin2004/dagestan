@@ -13,25 +13,26 @@ from dagestan.graph.schema import (
 
 class TestNodeType:
     def test_enum_values(self):
-        assert NodeType.ENTITY.value == "entity"
-        assert NodeType.CONCEPT.value == "concept"
-        assert NodeType.EVENT.value == "event"
-        assert NodeType.PREFERENCE.value == "preference"
-        assert NodeType.GOAL.value == "goal"
+        assert NodeType.ENTITY == "entity"
+        assert NodeType.CONCEPT == "concept"
+        assert NodeType.EVENT == "event"
+        assert NodeType.PREFERENCE == "preference"
+        assert NodeType.GOAL == "goal"
 
     def test_all_types_have_decay_rates(self):
-        for ntype in NodeType:
+        types = [getattr(NodeType, attr) for attr in dir(NodeType) if not attr.startswith("_")]
+        for ntype in types:
             assert ntype in DEFAULT_DECAY_RATES
 
 
 class TestEdgeType:
     def test_enum_values(self):
-        assert EdgeType.RELATES_TO.value == "relates_to"
-        assert EdgeType.CAUSED.value == "caused"
-        assert EdgeType.CONTRADICTS.value == "contradicts"
-        assert EdgeType.HAPPENED_BEFORE.value == "happened_before"
-        assert EdgeType.HAS_PREFERENCE.value == "has_preference"
-        assert EdgeType.WANTS.value == "wants"
+        assert EdgeType.RELATES_TO == "relates_to"
+        assert EdgeType.CAUSED == "caused"
+        assert EdgeType.CONTRADICTS == "contradicts"
+        assert EdgeType.HAPPENED_BEFORE == "happened_before"
+        assert EdgeType.HAS_PREFERENCE == "has_preference"
+        assert EdgeType.WANTS == "wants"
 
 
 class TestNode:

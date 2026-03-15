@@ -1,0 +1,314 @@
+{
+  "timestamp": "2026-03-09T06:55:00.776218+00:00",
+  "node_count": 17,
+  "edge_count": 11,
+  "nodes": [
+    {
+      "id": "576ee71a9754",
+      "type": "preference",
+      "label": "love python",
+      "attributes": {},
+      "created_at": "2026-03-09T05:40:47.504651+00:00",
+      "last_reinforced": "2026-03-09T05:40:47.504655+00:00",
+      "confidence_score": 0.9978,
+      "decay_rate": 0.02,
+      "source": ""
+    },
+    {
+      "id": "8cadf89fdb99",
+      "type": "goal",
+      "label": "build startup focused on graph databases",
+      "attributes": {},
+      "created_at": "2026-03-09T05:40:47.504670+00:00",
+      "last_reinforced": "2026-03-09T05:40:47.504672+00:00",
+      "confidence_score": 0.9989,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "3da74bb380d3",
+      "type": "concept",
+      "label": "graph databases",
+      "attributes": {},
+      "created_at": "2026-03-09T05:40:47.504682+00:00",
+      "last_reinforced": "2026-03-09T05:40:47.504684+00:00",
+      "confidence_score": 0.9989,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "1ae32fad84cc",
+      "type": "entity",
+      "label": "wright brothers",
+      "attributes": {
+        "role": "aviators",
+        "location": "Ohio"
+      },
+      "created_at": "2026-03-09T05:55:10.418183+00:00",
+      "last_reinforced": "2026-03-09T06:54:58.118302+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.005,
+      "source": ""
+    },
+    {
+      "id": "302d9458d194",
+      "type": "entity",
+      "label": "samuel langley",
+      "attributes": {
+        "role": "aviator",
+        "location": "USA"
+      },
+      "created_at": "2026-03-09T05:55:10.418205+00:00",
+      "last_reinforced": "2026-03-09T06:54:58.118319+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.005,
+      "source": ""
+    },
+    {
+      "id": "1aca4ec9af43",
+      "type": "entity",
+      "label": "dagestan",
+      "attributes": {
+        "type": "project",
+        "domain": "AI memory system"
+      },
+      "created_at": "2026-03-09T05:55:10.418219+00:00",
+      "last_reinforced": "2026-03-09T06:54:58.118327+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.005,
+      "source": ""
+    },
+    {
+      "id": "a26f069efaf1",
+      "type": "concept",
+      "label": "flight control",
+      "attributes": {},
+      "created_at": "2026-03-09T05:55:10.418230+00:00",
+      "last_reinforced": "2026-03-09T06:54:58.118334+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "9f00b7a478c1",
+      "type": "concept",
+      "label": "innovation",
+      "attributes": {},
+      "created_at": "2026-03-09T05:55:10.418240+00:00",
+      "last_reinforced": "2026-03-09T06:54:58.118340+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "06a4cda4c5ad",
+      "type": "concept",
+      "label": "neurosymbolic AI",
+      "attributes": {},
+      "created_at": "2026-03-09T05:55:10.418250+00:00",
+      "last_reinforced": "2026-03-09T06:54:58.118347+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "e52cdf5ae49d",
+      "type": "concept",
+      "label": "world model",
+      "attributes": {},
+      "created_at": "2026-03-09T05:55:10.418261+00:00",
+      "last_reinforced": "2026-03-09T06:54:58.118353+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "56f0d5bd5725",
+      "type": "event",
+      "label": "first flight",
+      "attributes": {
+        "date": "1903"
+      },
+      "created_at": "2026-03-09T05:55:10.418271+00:00",
+      "last_reinforced": "2026-03-09T06:54:58.118359+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.05,
+      "source": ""
+    },
+    {
+      "id": "eeec1e125924",
+      "type": "preference",
+      "label": "curiosity",
+      "attributes": {},
+      "created_at": "2026-03-09T05:55:10.418281+00:00",
+      "last_reinforced": "2026-03-09T06:54:58.118365+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.02,
+      "source": ""
+    },
+    {
+      "id": "0f986714b3a9",
+      "type": "goal",
+      "label": "build a memory system",
+      "attributes": {
+        "project": "dagestan"
+      },
+      "created_at": "2026-03-09T05:55:10.418291+00:00",
+      "last_reinforced": "2026-03-09T06:54:58.118370+00:00",
+      "confidence_score": 0.9,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "cbd6232c3b2d",
+      "type": "goal",
+      "label": "understand AI reasoning",
+      "attributes": {},
+      "created_at": "2026-03-09T05:55:10.418301+00:00",
+      "last_reinforced": "2026-03-09T06:54:58.118374+00:00",
+      "confidence_score": 0.3,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "1e476aea0d7a",
+      "type": "concept",
+      "label": "control problem",
+      "attributes": {
+        "description": "the challenge of maintaining control in flight"
+      },
+      "created_at": "2026-03-09T06:51:46.958250+00:00",
+      "last_reinforced": "2026-03-09T06:51:46.958252+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "1db1007f6c03",
+      "type": "goal",
+      "label": "build dagestan",
+      "attributes": {
+        "description": "create a memory layer for LLMs"
+      },
+      "created_at": "2026-03-09T06:51:46.958300+00:00",
+      "last_reinforced": "2026-03-09T06:51:46.958301+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "e9d54a23de11",
+      "type": "goal",
+      "label": "understand reasoning",
+      "attributes": {
+        "description": "develop a reasoning engine for AI"
+      },
+      "created_at": "2026-03-09T06:51:46.958309+00:00",
+      "last_reinforced": "2026-03-09T06:51:46.958311+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    }
+  ],
+  "edges": [
+    {
+      "id": "5e56d3c77eaf",
+      "source_id": "576ee71a9754",
+      "target_id": "8cadf89fdb99",
+      "type": "wants",
+      "created_at": "2026-03-09T05:40:47.504697+00:00",
+      "confidence_score": 0.9978,
+      "attributes": {}
+    },
+    {
+      "id": "86e7c2f5097d",
+      "source_id": "8cadf89fdb99",
+      "target_id": "3da74bb380d3",
+      "type": "relates_to",
+      "created_at": "2026-03-09T05:40:47.504706+00:00",
+      "confidence_score": 0.9989,
+      "attributes": {}
+    },
+    {
+      "id": "3808c805f3eb",
+      "source_id": "1ae32fad84cc",
+      "target_id": "a26f069efaf1",
+      "type": "relates_to",
+      "created_at": "2026-03-09T05:55:10.418315+00:00",
+      "confidence_score": 0.9996,
+      "attributes": {}
+    },
+    {
+      "id": "8d16aca8ea41",
+      "source_id": "1ae32fad84cc",
+      "target_id": "9f00b7a478c1",
+      "type": "relates_to",
+      "created_at": "2026-03-09T05:55:10.418325+00:00",
+      "confidence_score": 0.9996,
+      "attributes": {}
+    },
+    {
+      "id": "04ff2b31f6ff",
+      "source_id": "302d9458d194",
+      "target_id": "a26f069efaf1",
+      "type": "contradicts",
+      "created_at": "2026-03-09T05:55:10.418334+00:00",
+      "confidence_score": 0.9996,
+      "attributes": {}
+    },
+    {
+      "id": "43bc98304006",
+      "source_id": "1aca4ec9af43",
+      "target_id": "06a4cda4c5ad",
+      "type": "relates_to",
+      "created_at": "2026-03-09T05:55:10.418342+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "a5f8be2c9309",
+      "source_id": "1aca4ec9af43",
+      "target_id": "e52cdf5ae49d",
+      "type": "relates_to",
+      "created_at": "2026-03-09T05:55:10.418349+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "b04ccf935b30",
+      "source_id": "1aca4ec9af43",
+      "target_id": "0f986714b3a9",
+      "type": "wants",
+      "created_at": "2026-03-09T05:55:10.418357+00:00",
+      "confidence_score": 0.8996,
+      "attributes": {}
+    },
+    {
+      "id": "4c6862328e20",
+      "source_id": "1aca4ec9af43",
+      "target_id": "cbd6232c3b2d",
+      "type": "wants",
+      "created_at": "2026-03-09T05:55:10.418365+00:00",
+      "confidence_score": 0.2999,
+      "attributes": {}
+    },
+    {
+      "id": "a41636b4eecb",
+      "source_id": "56f0d5bd5725",
+      "target_id": "1ae32fad84cc",
+      "type": "happened_before",
+      "created_at": "2026-03-09T05:55:10.418373+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "e1a38c666ac1",
+      "source_id": "eeec1e125924",
+      "target_id": "1ae32fad84cc",
+      "type": "has_preference",
+      "created_at": "2026-03-09T05:55:10.418380+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    }
+  ]
+}
