@@ -1,0 +1,1 @@
+/home/nabin/projects/dagestan/evaluation/run_locomo_eval.py

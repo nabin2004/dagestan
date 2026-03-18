@@ -1,0 +1,1 @@
+/home/nabin/projects/dagestan/evaluation/event_summarization_eval.py

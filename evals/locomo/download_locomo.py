@@ -1,0 +1,1 @@
+/home/nabin/projects/dagestan/evaluation/download_locomo.py

@@ -1,0 +1,20 @@
+api_key_env: GEMINI_API_KEY
+contradiction_resolution: none
+conversation_ids: []
+dagestan_db_path: /tmp/dagestan_smoke.json
+decay_enabled: true
+hybrid_retrieval: false
+limit: 3
+locomo_path: evals/locomo/locomo_dataset.json
+model: stub
+nightly_curation: true
+provider: stub
+results_dir: evals/results/smoke
+retrieval_mode: graph
+run_id: '20260318_224056'
+schema_induction: true
+tasks:
+- qa
+- summarization
+- coherence
+vector_store_path: /tmp/chroma_smoke
