@@ -38,3 +38,6 @@ memory_snapshots/
 # Chats session
 anthropic/*
 anthropic/viz_demo_graph.json
+
+# Evaluation outputs
+evals/results/
