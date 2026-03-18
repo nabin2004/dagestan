@@ -226,19 +226,51 @@ See [viz/README.md](viz/README.md) for full details.
 | v1.0 | Benchmarks, paper, honest evaluation vs baselines | Planned |
 | v2.0 | Graph operations as reasoning substrate | Research |
 
-## Evaluation (Planned)
+## Evaluation (LOCOMO Benchmarks)
 
-We intend to benchmark Dagestan against:
-- Naive context window (just include recent messages)
-- Vector DB retrieval (e.g., ChromaDB)
+Dagestan includes an evaluation harness for benchmarking against the
+[LOCOMO benchmark](https://snap-research.github.io/locomo).
 
-On tasks requiring:
-- Temporal reasoning (what changed over time)
-- Contradiction resolution (conflicting information)
-- Preference tracking (user preferences across sessions)
-- Context coherence (does the LLM response stay consistent)
+Evaluation code/config lives under `evals/`:
 
-Performance claims will only be made after benchmarks are actually conducted. Until then: **[not yet conducted]**.
+- `evals/run_locomo_eval.py` — main evaluation runner (QA, summarization, coherence)
+- `evals/run_ablations.py` — ablation study runner
+- `evals/configs/*.yaml` — model/data settings (e.g., `smoke_test.yaml`, `locomo_gemini_flash.yaml`)
+
+Quick commands (from repo root):
+
+```bash
+# Install eval-only dependencies (dataset download / caching)
+pip install datasets huggingface_hub pyyaml
+
+# Download/cache the LOCOMO dataset locally
+make download-locomo
+
+# Smoke run (fast dry-run)
+make smoke
+
+# Full benchmark run
+make locomo
+
+# Single tasks
+make qa
+make summarization
+make coherence
+
+# Ablations
+make ablations
+make ablations-baselines
+```
+
+Notes:
+
+- The runner writes outputs under `evals/results/<run_id>/`.
+- The `make smoke` target uses the `provider: stub` setting from
+  `evals/configs/smoke_test.yaml`. If your current Dagestan backend does not
+  support `provider="stub"` for extraction/ingestion, run with a real provider
+  (e.g., `openai` / `anthropic`) by editing the config.
+
+Performance claims should be made only after you complete the benchmark runs.
 
 ## Constraints
 
