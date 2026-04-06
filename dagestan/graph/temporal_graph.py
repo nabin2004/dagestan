@@ -51,13 +51,17 @@ class TemporalGraph:
 
     def _record_schema_induction(self, node_type: str | None = None, edge_type: str | None = None) -> None:
         """Live schema registry for emerging entity/relation types."""
-        if node_type and node_type not in self.schema_registry["node_types"]:
-            self.schema_registry["node_types"].add(node_type)
-            logging.info(f"Schema induction: new NodeType observed -> {node_type}")
-            
-        if edge_type and edge_type not in self.schema_registry["edge_types"]:
-            self.schema_registry["edge_types"].add(edge_type)
-            logging.info(f"Schema induction: new EdgeType observed -> {edge_type}")
+        if node_type:
+            node_type_value = getattr(node_type, "value", node_type)
+            if node_type_value not in self.schema_registry["node_types"]:
+                self.schema_registry["node_types"].add(node_type_value)
+                logging.info(f"Schema induction: new NodeType observed -> {node_type_value}")
+
+        if edge_type:
+            edge_type_value = getattr(edge_type, "value", edge_type)
+            if edge_type_value not in self.schema_registry["edge_types"]:
+                self.schema_registry["edge_types"].add(edge_type_value)
+                logging.info(f"Schema induction: new EdgeType observed -> {edge_type_value}")
 
     # ── Node operations ─────────────────────────────────────────────
 
@@ -119,7 +123,7 @@ class TemporalGraph:
         For demonstration, assumes uniqueness of target for a specific source and relation type,
         unless it's 'relates_to' or 'happened_before'.
         """
-        if edge.type in ("relates_to", "happened_before"):
+        if edge.type in (EdgeType.RELATES_TO, EdgeType.HAPPENED_BEFORE):
             return None
             
         existing_edges = self.get_edges(node_id=edge.source_id, direction="outgoing")

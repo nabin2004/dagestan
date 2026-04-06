@@ -14,10 +14,16 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from enum import Enum, EnumMeta
 from typing import Any
 
 
-class NodeType:
+class _StringEnumMeta(EnumMeta):
+    def __dir__(cls) -> list[str]:
+        return list(cls.__members__.keys())
+
+
+class NodeType(str, Enum, metaclass=_StringEnumMeta):
     """Classification of knowledge nodes in the graph."""
 
     ENTITY = "entity"  # Person, place, object
@@ -27,7 +33,7 @@ class NodeType:
     GOAL = "goal"  # What someone wants
 
 
-class EdgeType:
+class EdgeType(str, Enum, metaclass=_StringEnumMeta):
     """Classification of relationships between nodes."""
 
     RELATES_TO = "relates_to"  # General semantic relationship
@@ -40,7 +46,7 @@ class EdgeType:
 
 # Default decay rates per node type.
 # Higher value = faster confidence loss per day.
-DEFAULT_DECAY_RATES: dict[str, float] = {
+DEFAULT_DECAY_RATES: dict[NodeType, float] = {
     NodeType.ENTITY: 0.005,  # Very slow — entities persist
     NodeType.CONCEPT: 0.01,  # Very slow — domain knowledge persists
     NodeType.EVENT: 0.05,  # Fast — old events lose relevance
@@ -76,7 +82,7 @@ class Node:
         source: Which conversation or session produced this node.
     """
 
-    type: str
+    type: NodeType | str
     label: str
     id: str = field(default_factory=_new_id)
     attributes: dict[str, Any] = field(default_factory=dict)
@@ -87,6 +93,7 @@ class Node:
     source: str = ""
 
     def __post_init__(self) -> None:
+        self.type = NodeType(self.type)
         if self.decay_rate is None:
             self.decay_rate = DEFAULT_DECAY_RATES.get(self.type, 0.02)
 
@@ -94,7 +101,7 @@ class Node:
         """Serialize to a plain dict for JSON storage."""
         return {
             "id": self.id,
-            "type": self.type,
+            "type": self.type.value,
             "label": self.label,
             "attributes": self.attributes,
             "created_at": self.created_at.isoformat(),
@@ -127,7 +134,7 @@ class Node:
 
     def __repr__(self) -> str:
         return (
-            f"Node(id={self.id!r}, type={self.type}, "
+            f"Node(id={self.id!r}, type={self.type.value}, "
             f"label={self.label!r}, confidence={self.confidence_score:.2f})"
         )
 
@@ -149,11 +156,14 @@ class Edge:
 
     source_id: str
     target_id: str
-    type: str
+    type: EdgeType | str
     id: str = field(default_factory=_new_id)
     created_at: datetime = field(default_factory=_now)
     confidence_score: float = 1.0
     attributes: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        self.type = EdgeType(self.type)
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to a plain dict for JSON storage."""
@@ -161,7 +171,7 @@ class Edge:
             "id": self.id,
             "source_id": self.source_id,
             "target_id": self.target_id,
-            "type": self.type,
+            "type": self.type.value,
             "created_at": self.created_at.isoformat(),
             "confidence_score": self.confidence_score,
             "attributes": self.attributes,
@@ -183,6 +193,6 @@ class Edge:
     def __repr__(self) -> str:
         return (
             f"Edge(id={self.id!r}, {self.source_id} "
-            f"--[{self.type}]--> {self.target_id}, "
+            f"--[{self.type.value}]--> {self.target_id}, "
             f"confidence={self.confidence_score:.2f})"
         )
