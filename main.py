@@ -16,15 +16,36 @@ def main():
 
     # Manual graph building
     print("Adding nodes and edges manually...")
-    alice = Node(type=NodeType.ENTITY, label="Alice")
-    python = Node(type=NodeType.CONCEPT, label="Python Programming")
-    startup = Node(type=NodeType.GOAL, label="Build a startup")
-    mem.add_node(alice)
-    mem.add_node(python)
-    mem.add_node(startup)
-    mem.add_edge(Edge(source_id=alice.id, target_id=python.id, type=EdgeType.HAS_PREFERENCE))
-    mem.add_edge(Edge(source_id=alice.id, target_id=startup.id, type=EdgeType.WANTS))
 
+    # Core entity
+    alice = Node(type=NodeType.ENTITY, label="Alice")
+
+    # Concepts
+    python = Node(type=NodeType.CONCEPT, label="Python")
+    ai = Node(type=NodeType.CONCEPT, label="Artificial Intelligence")
+    coffee = Node(type=NodeType.CONCEPT, label="Coffee")
+
+    # Goals
+    startup = Node(type=NodeType.GOAL, label="Build a startup")
+    learn_ai = Node(type=NodeType.GOAL, label="Learn AI")
+
+    # Preferences
+    likes_python = Node(type=NodeType.PREFERENCE, label="likes python")
+    likes_coffee = Node(type=NodeType.PREFERENCE, label="likes coffee")
+
+    # Add nodes
+    for n in [alice, python, ai, coffee, startup, learn_ai, likes_python, likes_coffee]:
+        mem.add_node(n)
+
+    # Edges
+    mem.add_edge(Edge(alice.id, python.id, EdgeType.HAS_PREFERENCE))
+    mem.add_edge(Edge(alice.id, coffee.id, EdgeType.HAS_PREFERENCE))
+
+    mem.add_edge(Edge(alice.id, startup.id, EdgeType.WANTS))
+    mem.add_edge(Edge(alice.id, learn_ai.id, EdgeType.WANTS))
+
+    mem.add_edge(Edge(learn_ai.id, ai.id, EdgeType.RELATES_TO))
+    mem.add_edge(Edge(startup.id, ai.id, EdgeType.RELATES_TO))    
     print(f"Nodes: {mem.node_count}, Edges: {mem.edge_count}")
 
     # Retrieve context
