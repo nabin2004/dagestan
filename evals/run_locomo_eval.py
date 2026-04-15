@@ -52,6 +52,11 @@ from typing import Literal, Optional
 
 import yaml
 
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None  # type: ignore[misc, assignment]
+
 from evals.scripts.data_loader import LocomoDataLoader
 from evals.scripts.qa_eval import QAEvaluator
 from evals.scripts.event_summarization_eval import EventSummarizationEvaluator
@@ -80,7 +85,7 @@ class EvalConfig:
     conversation_ids: list[str] = field(default_factory=list)  # subset
 
     # Model / provider
-    provider: str = "gemini"                  # gemini | openai | anthropic
+    provider: str = "gemini"                  # gemini | openrouter | openai | anthropic | stub
     model: str = "gemini-1.5-flash"
     api_key_env: str = "GEMINI_API_KEY"
 
@@ -371,6 +376,9 @@ def main():
         help="Override auto-generated run ID",
     )
     args = parser.parse_args()
+
+    if load_dotenv is not None:
+        load_dotenv()
 
     cfg = EvalConfig.from_yaml(args.config)
 

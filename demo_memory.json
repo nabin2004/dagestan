@@ -1,48 +1,92 @@
 {
-  "timestamp": "2026-04-06T18:49:38.009706+00:00",
-  "node_count": 4,
-  "edge_count": 2,
+  "timestamp": "2026-04-15T18:38:27.249850+00:00",
+  "node_count": 8,
+  "edge_count": 4,
   "nodes": [
     {
-      "id": "14a6573617bb",
+      "id": "ac25b7b9c29a",
       "type": "entity",
       "label": "Alice",
       "attributes": {},
-      "created_at": "2026-04-06T18:49:38.005382+00:00",
-      "last_reinforced": "2026-04-06T18:49:38.005387+00:00",
+      "created_at": "2026-04-15T18:38:27.245852+00:00",
+      "last_reinforced": "2026-04-15T18:38:27.245858+00:00",
       "confidence_score": 1.0,
       "decay_rate": 0.005,
       "source": ""
     },
     {
-      "id": "cc95e6bbf3b0",
+      "id": "da20b91ec5f9",
       "type": "concept",
-      "label": "Python Programming",
+      "label": "Python",
       "attributes": {},
-      "created_at": "2026-04-06T18:49:38.005713+00:00",
-      "last_reinforced": "2026-04-06T18:49:38.005715+00:00",
+      "created_at": "2026-04-15T18:38:27.245876+00:00",
+      "last_reinforced": "2026-04-15T18:38:27.245879+00:00",
       "confidence_score": 1.0,
       "decay_rate": 0.01,
       "source": ""
     },
     {
-      "id": "4fdd81df5b40",
+      "id": "e86a3de58cfb",
+      "type": "concept",
+      "label": "Artificial Intelligence",
+      "attributes": {},
+      "created_at": "2026-04-15T18:38:27.245889+00:00",
+      "last_reinforced": "2026-04-15T18:38:27.245891+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "a36a1c8a2815",
+      "type": "concept",
+      "label": "Coffee",
+      "attributes": {},
+      "created_at": "2026-04-15T18:38:27.245897+00:00",
+      "last_reinforced": "2026-04-15T18:38:27.245899+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "836f9f8c7ebb",
       "type": "goal",
       "label": "Build a startup",
       "attributes": {},
-      "created_at": "2026-04-06T18:49:38.005933+00:00",
-      "last_reinforced": "2026-04-06T18:49:38.005935+00:00",
+      "created_at": "2026-04-15T18:38:27.245904+00:00",
+      "last_reinforced": "2026-04-15T18:38:27.245905+00:00",
       "confidence_score": 1.0,
       "decay_rate": 0.01,
       "source": ""
     },
     {
-      "id": "7e8d17f6eebe",
-      "type": "preference",
-      "label": "Prefers coffee",
+      "id": "7bd219870c16",
+      "type": "goal",
+      "label": "Learn AI",
       "attributes": {},
-      "created_at": "2026-04-06T18:49:38.008047+00:00",
-      "last_reinforced": "2026-04-06T18:49:38.008048+00:00",
+      "created_at": "2026-04-15T18:38:27.245910+00:00",
+      "last_reinforced": "2026-04-15T18:38:27.245912+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.01,
+      "source": ""
+    },
+    {
+      "id": "f4ac3d28fe3c",
+      "type": "preference",
+      "label": "likes python",
+      "attributes": {},
+      "created_at": "2026-04-15T18:38:27.245917+00:00",
+      "last_reinforced": "2026-04-15T18:38:27.245918+00:00",
+      "confidence_score": 1.0,
+      "decay_rate": 0.02,
+      "source": ""
+    },
+    {
+      "id": "c478e0e601f0",
+      "type": "preference",
+      "label": "likes coffee",
+      "attributes": {},
+      "created_at": "2026-04-15T18:38:27.245923+00:00",
+      "last_reinforced": "2026-04-15T18:38:27.245925+00:00",
       "confidence_score": 1.0,
       "decay_rate": 0.02,
       "source": ""
@@ -50,33 +94,52 @@
   ],
   "edges": [
     {
-      "id": "15ab21c5d550",
-      "source_id": "14a6573617bb",
-      "target_id": "cc95e6bbf3b0",
+      "id": "7e9d3933a727",
+      "source_id": "ac25b7b9c29a",
+      "target_id": "da20b91ec5f9",
       "type": "has_preference",
-      "created_at": "2026-04-06T18:49:38.008251+00:00",
+      "created_at": "2026-04-15T18:38:27.247763+00:00",
       "confidence_score": 1.0,
       "attributes": {}
     },
     {
-      "id": "c7605541d59b",
-      "source_id": "14a6573617bb",
-      "target_id": "4fdd81df5b40",
+      "id": "6ec6076841b2",
+      "source_id": "ac25b7b9c29a",
+      "target_id": "836f9f8c7ebb",
       "type": "wants",
-      "created_at": "2026-04-06T18:49:38.008623+00:00",
+      "created_at": "2026-04-15T18:38:27.248304+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "8c8f85fce477",
+      "source_id": "7bd219870c16",
+      "target_id": "e86a3de58cfb",
+      "type": "relates_to",
+      "created_at": "2026-04-15T18:38:27.248889+00:00",
+      "confidence_score": 1.0,
+      "attributes": {}
+    },
+    {
+      "id": "09863df3f866",
+      "source_id": "836f9f8c7ebb",
+      "target_id": "e86a3de58cfb",
+      "type": "relates_to",
+      "created_at": "2026-04-15T18:38:27.249170+00:00",
       "confidence_score": 1.0,
       "attributes": {}
     }
   ],
   "schema_registry": {
     "node_types": [
-      "concept",
-      "entity",
       "preference",
+      "entity",
+      "concept",
       "goal"
     ],
     "edge_types": [
       "wants",
+      "relates_to",
       "has_preference"
     ]
   }

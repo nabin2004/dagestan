@@ -1,0 +1,27 @@
+# LOCOMO eval via OpenRouter (no GEMINI_API_KEY).
+# Requires: OPENROUTER_API_KEY in .env
+# Pick any OpenRouter model id, e.g. openai/gpt-4o-mini, google/gemini-2.0-flash-001
+
+locomo_path: evals/locomo/locomo_dataset.json
+limit: null
+
+provider: openrouter
+model: openai/gpt-4o-mini
+api_key_env: OPENROUTER_API_KEY
+
+dagestan_db_path: evals/results/dagestan_memory.json
+schema_induction: true
+hybrid_retrieval: true
+vector_store_path: evals/results/chroma_store
+nightly_curation: true
+decay_enabled: true
+contradiction_resolution: llm
+
+tasks:
+  - qa
+  - summarization
+  - coherence
+
+retrieval_mode: hybrid
+
+results_dir: evals/results

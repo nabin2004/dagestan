@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import Any, Callable, Protocol
 
 from ..graph.schema import Edge, EdgeType, Node, NodeType
@@ -37,11 +38,33 @@ class LLMClient(Protocol):
     def __call__(self, system_prompt: str, user_prompt: str) -> str: ...
 
 
+def _resolve_openrouter_api_key(explicit: str | None) -> str:
+    """Key from argument, then OPENROUTER_API_KEY / OPENAI_API_KEY (after optional .env load)."""
+    if explicit:
+        return explicit
+    key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
+    if key:
+        return key
+    try:
+        from dotenv import load_dotenv
+
+        load_dotenv()
+    except ImportError:
+        pass
+    key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
+    if not key:
+        raise ValueError(
+            "No API key: set OPENROUTER_API_KEY in .env (or environment), "
+            "or pass api_key=... to Dagestan(...)."
+        )
+    return key
+
+
 def _make_openai_client(
     api_key: str | None = None,
-    model: str = "google/gemini-3.1-pro-preview",
+    model: str = "openai/gpt-4o-mini",
 ) -> LLMClient:
-    """Create a simple OpenAI-based LLM callable."""
+    """Create an OpenAI-SDK client pointed at OpenRouter (OpenAI-compatible API)."""
 
     def call(system_prompt: str, user_prompt: str) -> str:
         try:
@@ -51,9 +74,17 @@ def _make_openai_client(
                 "openai package required. Install with: pip install dagestan[openai]"
             )
 
-        client = OpenAI(base_url="https://openrouter.ai/api/v1",
-                        api_key=api_key
-                        )
+        key = _resolve_openrouter_api_key(api_key)
+        client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=key,
+            default_headers={
+                "HTTP-Referer": os.environ.get(
+                    "OPENROUTER_HTTP_REFERER", "https://github.com/nabin/dagestan"
+                ),
+                "X-Title": os.environ.get("OPENROUTER_APP_TITLE", "Dagestan"),
+            },
+        )
         response = client.chat.completions.create(
             model=model,
             messages=[
@@ -93,6 +124,16 @@ def _make_anthropic_client(
     return call
 
 
+def _make_stub_client() -> LLMClient:
+    """Return a deterministic stub extractor response (no API calls)."""
+
+    def call(system_prompt: str, user_prompt: str) -> str:
+        # Minimal valid JSON object for the extractor parser.
+        return json.dumps({"nodes": [], "edges": []})
+
+    return call
+
+
 class ConversationExtractor:
     """
     Extracts typed graph nodes and edges from conversation text.
@@ -121,11 +162,15 @@ class ConversationExtractor:
         if llm_client is not None:
             self._llm = llm_client
         elif provider == "openai":
-            self._llm = _make_openai_client(api_key=api_key, model=model or "gpt-4o-mini")
+            self._llm = _make_openai_client(
+                api_key=api_key, model=model or "openai/gpt-4o-mini"
+            )
         elif provider == "anthropic":
             self._llm = _make_anthropic_client(
                 api_key=api_key, model=model or "claude-sonnet-4-20250514"
             )
+        elif provider == "stub":
+            self._llm = _make_stub_client()
         else:
             raise ValueError(
                 "Must provide either llm_client or provider ('openai' / 'anthropic')"

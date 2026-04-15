@@ -81,8 +81,13 @@ class DagestandAdapter:
         try:
             from dagestan import Dagestan  # type: ignore
 
+            # Dagestan only supports openai | anthropic | stub (OpenRouter → openai).
+            mem_provider = kwargs["provider"]
+            if mem_provider == "openrouter":
+                mem_provider = "openai"
+
             self._mem = Dagestan(
-                provider=kwargs["provider"],
+                provider=mem_provider,
                 model=kwargs.get("model"),
                 db_path=kwargs["db_path"],
                 # vector_store_path and schema_induction are planned v0.2+ params
@@ -205,7 +210,7 @@ class DagestandAdapter:
         if hasattr(self._mem, "_graph"):
             graph = self._mem._graph
             schema: dict[str, int] = {}
-            for node in graph.nodes.values():
+            for node in graph.nodes:
                 t = str(node.type)
                 schema[t] = schema.get(t, 0) + 1
             return schema
@@ -222,15 +227,16 @@ class DagestandAdapter:
         """Return {node_id: confidence_score} for decay calibration eval."""
         if hasattr(self._mem, "_graph"):
             return {
-                nid: node.confidence_score
-                for nid, node in self._mem._graph.nodes.items()
+                node.id: node.confidence_score
+                for node in self._mem._graph.nodes
             }
         return {}
 
     def get_snapshot_at_session(self, session_idx: int) -> dict:
         """Return the graph state snapshot after a given session (if snapshotting enabled)."""
-        if hasattr(self._mem, "_graph") and hasattr(self._mem._graph, "snapshots"):
-            snaps = self._mem._graph.snapshots
+        graph = getattr(self._mem, "_graph", None)
+        if graph is not None and hasattr(graph, "snapshots_store"):
+            snaps = graph.snapshots_store
             if session_idx < len(snaps):
                 return snaps[session_idx]
         return {}

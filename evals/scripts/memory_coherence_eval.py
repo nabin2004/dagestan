@@ -307,13 +307,17 @@ class MemoryCoherenceEvaluator:
                     if key in s and s[key].get(sub_key) is not None]
             return _mean(vals) if vals else None
 
+        composite_vals = [
+            float(s["composite_coherence"])
+            for s in scores
+            if isinstance(s.get("composite_coherence"), (int, float))
+        ]
         return {
             "schema_induction_macro_f1": avg_key("schema_induction", "macro_f1"),
             "contradiction_recall": avg_key("contradiction_recall", "recall"),
             "decay_pearson_r": avg_key("decay_calibration", "pearson_r"),
             "snapshot_fidelity_f1": avg_key("snapshot_fidelity", "f1"),
-            "composite_coherence": avg_key("composite_coherence", None)
-                                   or _mean([s.get("composite_coherence", 0.0) for s in scores]),
+            "composite_coherence": _mean(composite_vals) if composite_vals else None,
             "n_conversations": len(scores),
             "per_conversation": scores,
         }

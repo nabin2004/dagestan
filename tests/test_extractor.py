@@ -5,6 +5,7 @@ import json
 import pytest
 
 from dagestan.extraction.extractor import ConversationExtractor
+from dagestan import Dagestan
 from dagestan.graph.schema import EdgeType, NodeType
 
 
@@ -137,3 +138,65 @@ class TestConversationExtractor:
         )
         nodes, _ = extractor.extract("Hello")
         assert nodes[0].source == "session_42"
+
+
+def test_edges_survive_dedup_across_ingests(tmp_path):
+    """
+    Regression test: when nodes are deduped/reinforced by (type,label),
+    edges from subsequent ingests must be remapped to canonical node IDs
+    rather than dropped due to missing endpoint IDs.
+    """
+    db_path = str(tmp_path / "mem.json")
+
+    responses = [
+        {
+            "nodes": [
+                {"type": "entity", "label": "Alice", "attributes": {}},
+                {"type": "concept", "label": "coffee", "attributes": {}},
+            ],
+            "edges": [
+                {
+                    "source_label": "Alice",
+                    "target_label": "coffee",
+                    "type": "relates_to",
+                }
+            ],
+        },
+        {
+            "nodes": [
+                {"type": "entity", "label": "Alice", "attributes": {}},  # dedup
+                {"type": "concept", "label": "coffee", "attributes": {}},  # dedup
+                {"type": "event", "label": "bought coffee", "attributes": {}},
+            ],
+            "edges": [
+                {
+                    "source_label": "Alice",
+                    "target_label": "bought coffee",
+                    "type": "caused",
+                },
+                {
+                    "source_label": "bought coffee",
+                    "target_label": "coffee",
+                    "type": "relates_to",
+                },
+            ],
+        },
+    ]
+
+    def llm(system: str, user: str) -> str:
+        assert responses, "Mock LLM called more times than expected"
+        return json.dumps(responses.pop(0))
+
+    mem = Dagestan(llm_client=llm, db_path=db_path, auto_save=False)
+
+    nodes_added_1, edges_added_1 = mem.ingest("session 1")
+    assert nodes_added_1 == 2
+    assert edges_added_1 == 1
+    assert mem.node_count == 2
+    assert mem.edge_count == 1
+
+    nodes_added_2, edges_added_2 = mem.ingest("session 2")
+    assert nodes_added_2 == 1  # only the new event
+    assert edges_added_2 == 2
+    assert mem.node_count == 3
+    assert mem.edge_count == 3

@@ -7,6 +7,7 @@ REPO_ROOT := $(CURDIR)
 EVALS_DIR := $(REPO_ROOT)/evals
 
 DEFAULT_LOCOMO_CONFIG := $(EVALS_DIR)/configs/locomo_gemini_flash.yaml
+DEFAULT_LOCOMO_OPENROUTER_CONFIG := $(EVALS_DIR)/configs/locomo_openrouter.yaml
 DEFAULT_ABLATION_CONFIG := $(EVALS_DIR)/configs/ablation.yaml
 
 # Defaults for the generic runner.
@@ -18,13 +19,14 @@ NO_SCHEMA_INDUCTION ?= 0
 RUN_ID ?=
 
 .DEFAULT_GOAL := help
-.PHONY: help evals-check evals-shim evals-deps run smoke locomo qa summarization coherence \
+.PHONY: help evals-check evals-shim evals-deps run smoke locomo locomo-openrouter qa summarization coherence \
 	ablations ablations-baselines download-locomo
 
 help:
 	@echo "Usage:"
 	@echo "  make smoke                       # CI-safe, stub provider"
-	@echo "  make locomo LIMIT=5             # full benchmark (Gemini config)"
+	@echo "  make locomo LIMIT=5             # Gemini config (needs GEMINI_API_KEY)"
+	@echo "  make locomo-openrouter LIMIT=5  # OpenRouter (needs OPENROUTER_API_KEY in .env)"
 	@echo "  make qa TASK=qa LIMIT=3         # single task (overrides TASK)"
 	@echo "  make run CONFIG=... TASK=...   # generic runner"
 	@echo "  make download-locomo            # download/cached LOCOMO dataset"
@@ -61,6 +63,10 @@ smoke: evals-check
 # Full LOCOMO benchmark run (Gemini Flash). Add LIMIT=5 to limit conversations.
 locomo: evals-check
 	PYTHONPATH=. $(PYTHON) "$(EVALS_DIR)/run_locomo_eval.py" --config "$(DEFAULT_LOCOMO_CONFIG)" $(if $(strip $(LIMIT)),--limit $(LIMIT),) $(if $(filter-out all,$(TASK)),--task $(TASK),) $(if $(strip $(RETRIEVAL)),--retrieval $(RETRIEVAL),) $(if $(filter 1,$(NO_SCHEMA_INDUCTION)),--no-schema-induction,) $(if $(strip $(RUN_ID)),--run-id $(RUN_ID),)
+
+# Same as locomo but uses evals/configs/locomo_openrouter.yaml (OPENROUTER_API_KEY).
+locomo-openrouter: evals-check
+	PYTHONPATH=. $(PYTHON) "$(EVALS_DIR)/run_locomo_eval.py" --config "$(DEFAULT_LOCOMO_OPENROUTER_CONFIG)" $(if $(strip $(LIMIT)),--limit $(LIMIT),) $(if $(filter-out all,$(TASK)),--task $(TASK),) $(if $(strip $(RETRIEVAL)),--retrieval $(RETRIEVAL),) $(if $(filter 1,$(NO_SCHEMA_INDUCTION)),--no-schema-induction,) $(if $(strip $(RUN_ID)),--run-id $(RUN_ID),)
 
 run: evals-check
 	PYTHONPATH=. $(PYTHON) "$(EVALS_DIR)/run_locomo_eval.py" --config "$(if $(strip $(CONFIG)),$(CONFIG),$(DEFAULT_LOCOMO_CONFIG))" $(if $(strip $(LIMIT)),--limit $(LIMIT),) $(if $(filter-out all,$(TASK)),--task $(TASK),) $(if $(strip $(RETRIEVAL)),--retrieval $(RETRIEVAL),) $(if $(filter 1,$(NO_SCHEMA_INDUCTION)),--no-schema-induction,) $(if $(strip $(RUN_ID)),--run-id $(RUN_ID),)

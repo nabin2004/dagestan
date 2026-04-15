@@ -23,10 +23,22 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 log = logging.getLogger(__name__)
+
+# LOCOMO JSON from GitHub (snap-research/locomo/data/locomo10.json) uses numeric QA categories.
+_LOCOMO_INT_CATEGORY: dict[int, str] = {
+    1: "single_hop",
+    2: "temporal",
+    3: "open_domain",
+    4: "multi_hop",
+    5: "adversarial",
+}
+
+_SESSION_NUM = re.compile(r"^session_(\d+)$")
 
 
 class LocomoDataLoader:
@@ -69,11 +81,24 @@ class LocomoDataLoader:
     # ------------------------------------------------------------------
 
     def _load_local(self) -> list[dict]:
-        raw = json.loads(self.local_path.read_text())
-        # Support both {conversations: [...]} envelope and bare list
-        if isinstance(raw, dict):
-            raw = raw.get("conversations", raw.get("data", list(raw.values())[0]))
-        return [self._normalise(c) for c in raw]
+        blob = json.loads(self.local_path.read_text())
+        if isinstance(blob, list):
+            convs: list[Any] = blob
+        elif isinstance(blob, dict):
+            convs = blob.get("conversations", blob.get("data"))
+            if convs is None:
+                list_children = [
+                    v for v in blob.values()
+                    if isinstance(v, list) and v and isinstance(v[0], dict)
+                ]
+                convs = list_children[0] if len(list_children) == 1 else []
+        else:
+            convs = []
+        if not isinstance(convs, list):
+            raise ValueError(
+                f"Expected a JSON list or {{conversations: [...]}} in {self.local_path}"
+            )
+        return [self._normalise(c, index=i) for i, c in enumerate(convs)]
 
     def _load_hf(self, split: str = "test") -> list[dict]:
         try:
@@ -87,7 +112,7 @@ class LocomoDataLoader:
             )
 
         ds = load_dataset(self.HF_DATASET_ID, split=split)
-        conversations = [self._normalise_hf_row(row) for row in ds]
+        conversations = [self._normalise_hf_row(row, index=i) for i, row in enumerate(ds)]
         # Cache locally for future runs
         self.local_path.parent.mkdir(parents=True, exist_ok=True)
         self.local_path.write_text(json.dumps(conversations, indent=2))
@@ -98,21 +123,145 @@ class LocomoDataLoader:
     # Normalisation helpers
     # ------------------------------------------------------------------
 
-    def _normalise(self, raw: dict) -> dict:
+    def _normalise(self, raw: dict, *, index: int = 0) -> dict:
         """Normalise a locally-stored conversation dict."""
+        if not isinstance(raw, dict):
+            return {
+                "id": f"invalid_{index}",
+                "sessions": [],
+                "qa_pairs": [],
+                "event_summaries": [],
+                "personas": {},
+            }
+        if self._is_snap_github_locomo(raw):
+            return self._normalise_snap_github_locomo(raw, index=index)
         # Handle different schema versions
         sessions = raw.get("sessions") or self._extract_sessions_from_turns(raw)
         return {
-            "id": str(raw.get("id", raw.get("conversation_id", "unknown"))),
+            "id": str(raw.get("id", raw.get("conversation_id", f"conv_{index}"))),
             "sessions": sessions,
-            "qa_pairs": self._normalise_qa(raw.get("qa_pairs", raw.get("qas", []))),
+            "qa_pairs": self._normalise_qa(
+                raw.get("qa_pairs", raw.get("qas", raw.get("qa", [])))
+            ),
             "event_summaries": self._normalise_summaries(
                 raw.get("event_summaries", raw.get("event_graphs", []))
             ),
             "personas": raw.get("personas", {}),
         }
 
-    def _normalise_hf_row(self, row: dict) -> dict:
+    def _is_snap_github_locomo(self, raw: dict) -> bool:
+        """True for locomo10.json from github.com/snap-research/locomo (data/)."""
+        conv = raw.get("conversation")
+        if not isinstance(conv, dict):
+            return False
+        return any(_SESSION_NUM.match(k) for k in conv)
+
+    def _normalise_snap_github_locomo(self, raw: dict, *, index: int) -> dict:
+        """Map snap-research GitHub LOCOMO JSON into the eval harness schema."""
+        conv = raw["conversation"]
+        speaker_a = str(conv.get("speaker_a", "speaker_a"))
+        speaker_b = str(conv.get("speaker_b", "speaker_b"))
+
+        session_indices: list[int] = []
+        for key in conv:
+            m = _SESSION_NUM.match(key)
+            if m:
+                session_indices.append(int(m.group(1)))
+        session_indices = sorted(set(session_indices))
+
+        sessions: list[dict[str, Any]] = []
+        for sid in session_indices:
+            date = str(conv.get(f"session_{sid}_date_time", ""))
+            turns_raw = conv.get(f"session_{sid}", [])
+            if not isinstance(turns_raw, list):
+                continue
+            turns: list[dict[str, str]] = []
+            for t in turns_raw:
+                if not isinstance(t, dict):
+                    continue
+                text = str(t.get("text", "")).strip()
+                cap = t.get("blip_caption") or t.get("query") or ""
+                cap_s = str(cap).strip() if cap else ""
+                if t.get("img_url") and cap_s:
+                    text = f"{text} [image: {cap_s}]".strip()
+                turns.append({
+                    "speaker": str(t.get("speaker", "?")),
+                    "text": text,
+                    "image_caption": cap_s,
+                    "timestamp": str(t.get("dia_id", "")),
+                })
+            sessions.append({"session_id": sid, "turns": turns, "date": date})
+
+        qa_src = raw.get("qa", raw.get("qa_pairs", []))
+        qa_pairs = self._normalise_qa_github(qa_src if isinstance(qa_src, list) else [])
+
+        event_summaries = self._event_summary_github_to_summaries(raw.get("event_summary"))
+
+        cid = raw.get("id") or raw.get("conversation_id")
+        if cid is None:
+            cid = f"{speaker_a}_{speaker_b}_{index}"
+
+        return {
+            "id": str(cid),
+            "sessions": sessions,
+            "qa_pairs": qa_pairs,
+            "event_summaries": event_summaries,
+            "personas": {speaker_a: speaker_a, speaker_b: speaker_b},
+        }
+
+    def _normalise_qa_github(self, raw_qas: list[dict]) -> list[dict]:
+        out: list[dict] = []
+        for qa in raw_qas:
+            if not isinstance(qa, dict):
+                continue
+            cat = qa.get("category", "single_hop")
+            if isinstance(cat, int):
+                cat = _LOCOMO_INT_CATEGORY.get(cat, "single_hop")
+            else:
+                cat = str(cat)
+            ans = qa.get("answer", qa.get("ground_truth", qa.get("adversarial_answer", "")))
+            if isinstance(ans, (int, float)):
+                ans = str(ans)
+            else:
+                ans = str(ans or "")
+            out.append({
+                "question": str(qa.get("question", qa.get("q", ""))),
+                "answer": ans,
+                "category": cat,
+                "turn_ids": qa.get("turn_ids", qa.get("evidence", qa.get("evidence_turn_ids", []))),
+            })
+        return out
+
+    def _event_summary_github_to_summaries(
+        self, event_summary: Any,
+    ) -> list[dict]:
+        if not isinstance(event_summary, dict):
+            return []
+        out: list[dict] = []
+        for key, block in event_summary.items():
+            if not key.startswith("events_session_") or not isinstance(block, dict):
+                continue
+            date = str(block.get("date", ""))
+            events: list[str] = []
+            speaker = "mixed"
+            for spk, evs in block.items():
+                if spk == "date":
+                    continue
+                if isinstance(evs, list):
+                    if evs and not events:
+                        speaker = str(spk)
+                    for e in evs:
+                        if isinstance(e, str) and e.strip():
+                            events.append(e.strip())
+            if events:
+                out.append({
+                    "timeframe": {"start": date or None, "end": date or None},
+                    "events": events,
+                    "speaker": speaker,
+                })
+        return out
+
+    def _normalise_hf_row(self, row: dict, *, index: int = 0) -> dict:
         """
         Normalise a raw HuggingFace dataset row into our internal format.
         LOCOMO HF schema (as of Feb 2024):
@@ -138,7 +287,7 @@ class LocomoDataLoader:
         ]
 
         return {
-            "id": str(row.get("id", row.get("conv_id", "unknown"))),
+            "id": str(row.get("id", row.get("conv_id", f"conv_{index}"))),
             "sessions": sessions,
             "qa_pairs": self._normalise_qa(row.get("question", [])),
             "event_summaries": self._normalise_summaries(row.get("event_graph", [])),
@@ -156,13 +305,26 @@ class LocomoDataLoader:
             })
         return normalised
 
-    def _normalise_summaries(self, raw: list[dict]) -> list[dict]:
+    def _normalise_summaries(self, raw: list) -> list[dict]:
         """
         LOCOMO event graphs are per-speaker event lists.
         We convert them into timeframe-scoped summary tasks.
         """
         normalised = []
-        for item in raw:
+        for item in raw or []:
+            if not isinstance(item, dict):
+                continue
+            # Hand-authored / smoke format: events are plain strings
+            if "events" in item and isinstance(item.get("events"), list):
+                evs = item["events"]
+                if evs and all(isinstance(x, str) for x in evs):
+                    tf = item.get("timeframe") or {"start": None, "end": None}
+                    normalised.append({
+                        "timeframe": tf if isinstance(tf, dict) else {"start": None, "end": None},
+                        "events": list(evs),
+                        "speaker": str(item.get("speaker", "unknown")),
+                    })
+                    continue
             # Handle flat event list vs {speaker: events} dict
             if "events" in item:
                 events = item["events"]
@@ -173,7 +335,10 @@ class LocomoDataLoader:
                 speaker = item.get("speaker", "unknown")
                 normalised.append({
                     "timeframe": {"start": None, "end": None},
-                    "events": [e.get("event", str(e)) for e in events],
+                    "events": [
+                        e.get("event", str(e)) if isinstance(e, dict) else str(e)
+                        for e in events
+                    ],
                     "speaker": speaker,
                 })
                 break
@@ -181,13 +346,19 @@ class LocomoDataLoader:
                 continue
 
             if events:
-                dates = [e.get("date") for e in events if e.get("date")]
+                dates = [
+                    e["date"] for e in events
+                    if isinstance(e, dict) and e.get("date")
+                ]
                 normalised.append({
                     "timeframe": {
                         "start": min(dates) if dates else None,
                         "end": max(dates) if dates else None,
                     },
-                    "events": [e.get("event", str(e)) for e in events],
+                    "events": [
+                        e.get("event", str(e)) if isinstance(e, dict) else str(e)
+                        for e in events
+                    ],
                     "speaker": speaker,
                 })
         return normalised

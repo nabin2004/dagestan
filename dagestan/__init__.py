@@ -6,8 +6,10 @@ not a flat vector store. Supports contradiction detection, temporal decay,
 gap analysis, and relationship-aware retrieval.
 
 Quick start:
+    from dotenv import load_dotenv
     from dagestan import Dagestan
 
+    load_dotenv()  # reads OPENROUTER_API_KEY from .env
     mem = Dagestan(provider="openai")
     mem.ingest("User said they love coffee and want to build a startup.")
     context = mem.retrieve("What does the user care about?")
@@ -67,8 +69,9 @@ class Dagestan:
         Args:
             storage: Backend type — "json" for v0.1.
             db_path: Path for the storage file.
-            provider: LLM provider — "openai" or "anthropic".
-            api_key: API key for the LLM provider.
+            provider: LLM provider — "openai" (OpenRouter) or "anthropic".
+            api_key: API key; for OpenRouter defaults to OPENROUTER_API_KEY
+                (or OPENAI_API_KEY) from the environment / .env.
             model: Model name override.
             llm_client: Custom LLM callable — overrides provider/api_key/model.
             auto_save: Whether to save after ingest/curate operations.
@@ -137,9 +140,21 @@ class Dagestan:
 
         nodes, edges = self._extractor.extract(conversation)
 
-        # Add to graph, handling duplicates by label
+        # Add to graph, handling duplicates by label.
+        #
+        # IMPORTANT: Edges returned by the extractor reference the per-extraction
+        # Node IDs. If we dedupe nodes by (type,label) and reinforce an existing
+        # node instead of adding the new one, those per-extraction IDs won't exist
+        # in the graph, and edges would be dropped. We therefore remap edge
+        # endpoints to the canonical node IDs in the graph.
+        batch_id_to_key: dict[str, tuple[NodeType, str]] = {
+            n.id: (NodeType(n.type), n.label) for n in nodes
+        }
+        canonical_id_for: dict[tuple[NodeType, str], str] = {}
+
         nodes_added = 0
         for node in nodes:
+            key = (NodeType(node.type), node.label)
             # Check for existing node with same label and type
             existing = [
                 n for n in self._graph.get_nodes_by_label(node.label)
@@ -149,13 +164,22 @@ class Dagestan:
                 # Reinforce existing node instead of duplicating
                 existing[0].reinforce()
                 logger.debug(f"Reinforced existing node: {existing[0].label}")
+                canonical_id_for[key] = existing[0].id
             else:
                 self._graph.add_node(node)
                 nodes_added += 1
+                canonical_id_for[key] = node.id
 
         edges_added = 0
         for edge in edges:
             try:
+                src_key = batch_id_to_key.get(edge.source_id)
+                tgt_key = batch_id_to_key.get(edge.target_id)
+                if src_key is not None:
+                    edge.source_id = canonical_id_for.get(src_key, edge.source_id)
+                if tgt_key is not None:
+                    edge.target_id = canonical_id_for.get(tgt_key, edge.target_id)
+
                 self._graph.add_edge(edge)
                 edges_added += 1
             except ValueError as e:

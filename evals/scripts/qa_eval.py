@@ -16,6 +16,7 @@ Scoring: token-level F1 (partial match), identical to LOCOMO paper.
 from __future__ import annotations
 
 import logging
+import os
 import re
 import string
 from collections import Counter, defaultdict
@@ -170,11 +171,32 @@ def _mean(vals: list[float]) -> float:
 # LLM client factory
 # ---------------------------------------------------------------------------
 
+def _openrouter_api_key() -> str:
+    """OPENROUTER_API_KEY or OPENAI_API_KEY, loading .env if needed."""
+    key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
+    if key:
+        return key
+    try:
+        from dotenv import load_dotenv
+
+        load_dotenv()
+    except ImportError:
+        pass
+    key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
+    if not key:
+        raise ValueError(
+            "OpenRouter: set OPENROUTER_API_KEY in .env (or OPENAI_API_KEY on OpenRouter)."
+        )
+    return key
+
+
 def _build_llm_client(provider: str, model: str) -> "_LLMClient":
     if provider == "gemini":
         return _GeminiClient(model)
     elif provider == "openai":
         return _OpenAIClient(model)
+    elif provider == "openrouter":
+        return _OpenRouterClient(model)
     elif provider == "anthropic":
         return _AnthropicClient(model)
     elif provider == "stub":
@@ -193,7 +215,6 @@ class _GeminiClient(_LLMClient):
         self.model = model
         try:
             import google.generativeai as genai  # type: ignore
-            import os
             genai.configure(api_key=os.environ["GEMINI_API_KEY"])
             self._genai = genai
         except ImportError:
@@ -213,10 +234,20 @@ class _OpenAIClient(_LLMClient):
         self.model = model
         try:
             from openai import OpenAI  # type: ignore
-            import os
-            self._client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
         except ImportError:
             raise RuntimeError("pip install openai")
+        key = os.environ.get("OPENAI_API_KEY")
+        if not key:
+            try:
+                from dotenv import load_dotenv
+
+                load_dotenv()
+            except ImportError:
+                pass
+            key = os.environ.get("OPENAI_API_KEY")
+        if not key:
+            raise ValueError("Set OPENAI_API_KEY for provider=openai.")
+        self._client = OpenAI(api_key=key)
 
     def complete(self, system: str, user: str) -> str:
         resp = self._client.chat.completions.create(
@@ -227,7 +258,42 @@ class _OpenAIClient(_LLMClient):
             ],
             temperature=0,
         )
-        return resp.choices[0].message.content.strip()
+        content = resp.choices[0].message.content or ""
+        return content.strip()
+
+
+class _OpenRouterClient(_LLMClient):
+    """OpenAI-compatible chat API at openrouter.ai (use provider/model ids)."""
+
+    def __init__(self, model: str):
+        self.model = model
+        try:
+            from openai import OpenAI  # type: ignore
+        except ImportError:
+            raise RuntimeError("pip install openai")
+        key = _openrouter_api_key()
+        self._client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=key,
+            default_headers={
+                "HTTP-Referer": os.environ.get(
+                    "OPENROUTER_HTTP_REFERER", "https://github.com/nabin/dagestan"
+                ),
+                "X-Title": os.environ.get("OPENROUTER_APP_TITLE", "Dagestan LOCOMO eval"),
+            },
+        )
+
+    def complete(self, system: str, user: str) -> str:
+        resp = self._client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            temperature=0,
+        )
+        content = resp.choices[0].message.content or ""
+        return content.strip()
 
 
 class _AnthropicClient(_LLMClient):
@@ -235,7 +301,6 @@ class _AnthropicClient(_LLMClient):
         self.model = model
         try:
             import anthropic  # type: ignore
-            import os
             self._client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
         except ImportError:
             raise RuntimeError("pip install anthropic")
